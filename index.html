@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="ru"><head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=1920">
+<title>MyKino TV</title>
+<style>
+  :root{--bg:#0b0b10;--card:#1b1b25;--accent:#4da3ff}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:#fff;font:32px/1.3 sans-serif;overflow:hidden}
+  header{padding:30px 60px;font-size:48px;font-weight:700}
+  #grid{display:flex;flex-wrap:wrap;padding:20px 40px}
+  .card{display:block;width:calc(25% - 40px);margin:20px;background:var(--card);border-radius:18px;padding:0;border:0;color:#fff;text-align:left;
+        font:inherit;overflow:hidden;transition:transform .15s}
+  .card .pic{height:200px;background:linear-gradient(135deg,#2b3a67,#1b1b25);display:flex;
+        align-items:center;justify-content:center;font-size:64px}
+  .card .t{padding:18px 22px}
+  .card:focus{outline:6px solid var(--accent);transform:scale(1.06)}
+  #player{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;display:none}
+  #player video{width:100%;height:100%}
+  #hud{position:absolute;left:0;right:0;bottom:0;padding:30px 60px;background:linear-gradient(transparent,#000c);
+       font-size:30px;opacity:0;transition:opacity .3s}
+  #hud.show{opacity:1}
+  #bar{height:8px;background:#444;margin-top:12px;border-radius:4px}
+  #bar div{height:100%;width:0;background:var(--accent);border-radius:4px}
+</style></head>
+<body>
+<header>🎬 MyKino</header>
+<div id="grid"></div>
+
+<div id="player">
+  <video id="v" autoplay></video>
+  <div id="hud"><span id="ptitle"></span><div id="bar"><div id="prog"></div></div></div>
+</div>
+
+<script>
+// ===== КАТАЛОГ: замените на данные с вашего сервера =====
+// Для реального сайта: fetch('/api/catalog.json').then(r=>r.json()).then(render)
+var CATALOG = [
+  {title:"Тест MP4 (Big Buck Bunny)", url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
+  {title:"Тест MP4 (Sintel)",         url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"},
+  {title:"Тест HLS (.m3u8)",          url:"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"},
+  {title:"Тест MP4 (Tears of Steel)", url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"}
+];
+
+var KEY = {LEFT:37,UP:38,RIGHT:39,DOWN:40,ENTER:13,BACK:10009,
+           PLAY:415,PAUSE:19,STOP:413,FF:417,RW:412,PLAYPAUSE:10252};
+
+// Регистрируем медиа-кнопки, если доступен Tizen API
+try{ ["MediaPlay","MediaPause","MediaStop","MediaPlayPause","MediaFastForward","MediaRewind"]
+      .forEach(function(k){ tizen.tvinputdevice.registerKey(k); }); }catch(e){}
+
+var grid = document.getElementById("grid"), player = document.getElementById("player"),
+    v = document.getElementById("v"), hud = document.getElementById("hud"),
+    prog = document.getElementById("prog"), lastCard = null, hudTimer;
+
+function render(items){
+  grid.innerHTML = "";
+  items.forEach(function(it){
+    var b = document.createElement("button");
+    b.className = "card";
+    b.innerHTML = '<div class="pic">▶</div><div class="t"></div>';
+    b.querySelector(".t").textContent = it.title;
+    b.onclick = function(){ lastCard = b; play(it); };
+    grid.appendChild(b);
+  });
+  grid.firstChild && grid.firstChild.focus();
+}
+
+// ----- Навигация стрелками по сетке (ищем ближайший элемент в нужную сторону) -----
+function moveFocus(dir){
+  var cur = document.activeElement, cards = [].slice.call(document.querySelectorAll(".card"));
+  if (!cur || !cur.classList.contains("card")) { cards[0] && cards[0].focus(); return; }
+  var r = cur.getBoundingClientRect(), cx = r.left+r.width/2, cy = r.top+r.height/2, best=null, bd=1e9;
+  cards.forEach(function(c){
+    if (c===cur) return;
+    var q = c.getBoundingClientRect(), x = q.left+q.width/2, y = q.top+q.height/2, dx=x-cx, dy=y-cy;
+    var ok = (dir==="LEFT"&&dx<-10)||(dir==="RIGHT"&&dx>10)||(dir==="UP"&&dy<-10)||(dir==="DOWN"&&dy>10);
+    if (!ok) return;
+    var d = (dir==="LEFT"||dir==="RIGHT") ? Math.abs(dx)+Math.abs(dy)*3 : Math.abs(dy)+Math.abs(dx)*3;
+    if (d<bd){bd=d;best=c;}
+  });
+  if (best){ best.focus(); best.scrollIntoView({block:"nearest"}); }
+}
+
+// ----- Плеер -----
+function play(it){
+  document.getElementById("ptitle").textContent = it.title;
+  player.style.display = "block";
+  v.src = it.url;            // MP4 и HLS (.m3u8) ТВ играет нативно
+  v.play();
+  showHud();
+}
+function stop(){
+  v.pause(); v.removeAttribute("src"); v.load();
+  player.style.display = "none";
+  lastCard && lastCard.focus();
+}
+function showHud(){ hud.classList.add("show"); clearTimeout(hudTimer);
+  hudTimer = setTimeout(function(){ hud.classList.remove("show"); }, 3500); }
+function toggle(){ v.paused ? v.play() : v.pause(); showHud(); }
+function seek(s){ v.currentTime = Math.max(0, v.currentTime + s); showHud(); }
+v.addEventListener("timeupdate", function(){
+  if (v.duration) prog.style.width = (v.currentTime/v.duration*100)+"%"; });
+v.addEventListener("ended", stop);
+
+document.addEventListener("keydown", function(e){
+  var k = e.keyCode, inPlayer = player.style.display === "block";
+  if (inPlayer){
+    if (k===KEY.ENTER||k===KEY.PLAYPAUSE) toggle();
+    else if (k===KEY.PLAY) { v.play(); showHud(); }
+    else if (k===KEY.PAUSE) { v.pause(); showHud(); }
+    else if (k===KEY.LEFT||k===KEY.RW) seek(-10);
+    else if (k===KEY.RIGHT||k===KEY.FF) seek(10);
+    else if (k===KEY.BACK||k===KEY.STOP||k===27||k===8) stop();
+    else showHud();
+    e.preventDefault(); return;
+  }
+  if (k===KEY.LEFT) moveFocus("LEFT");
+  else if (k===KEY.RIGHT) moveFocus("RIGHT");
+  else if (k===KEY.UP) moveFocus("UP");
+  else if (k===KEY.DOWN) moveFocus("DOWN");
+  else return;
+  e.preventDefault();
+});
+
+render(CATALOG);
+</script></body></html>
