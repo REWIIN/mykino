@@ -2,22 +2,93 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,">
 <meta name="theme-color" content="#080b10">
 <title>ЭФИР — Smart TV IPTV</title>
 <style>
-:root{color-scheme:dark;--bg:#080b10;--panel:#101720;--panel2:#182331;--line:#263244;--txt:#f4f7fb;--muted:#91a0b4;--mint:#55edbc;--blue:#70aaff;--red:#ff7488;--top:72px;--left:clamp(410px,34vw,690px)}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-size:17px}body{background:radial-gradient(ellipse at 76% -20%,#19364a 0,transparent 45%),linear-gradient(135deg,#080b10,#0b1018 72%)}button,input{font:inherit;color:inherit}button{cursor:pointer;touch-action:manipulation;border:1px solid transparent;background:transparent}button:focus,input:focus{outline:none}button:focus-visible,input:focus-visible,select:focus-visible{outline:4px solid var(--mint);outline-offset:2px;box-shadow:0 0 0 6px #55edbc24}
-.topbar{height:var(--top);display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,2.5vw,46px);background:#0b111a;border-bottom:1px solid #ffffff12;box-shadow:0 8px 34px #0003;position:relative;z-index:3}.brand{display:flex;align-items:center;gap:13px;font-weight:950;font-size:23px;letter-spacing:.18em}.brand-mark{width:43px;height:43px;border-radius:13px;display:grid;place-items:center;background:linear-gradient(135deg,var(--mint),#6ea8ff);color:#051711;font-size:22px;letter-spacing:0;box-shadow:0 5px 22px #55edbc24}.brand small{display:block;margin-top:0;color:#8293a9;letter-spacing:.25em;font-size:10px;font-weight:800}.top-meta{display:flex;align-items:center;gap:18px;color:var(--muted);font-size:14px}.top-count{color:#e9f1fa;font-weight:800}.connection{display:inline-flex;align-items:center;gap:8px;color:var(--mint);font-weight:800;letter-spacing:.05em}.led{width:8px;height:8px;border-radius:50%;background:var(--mint);box-shadow:0 0 13px #55edbc88}
-.layout{height:calc(100dvh - var(--top));min-height:0;display:grid;grid-template-columns:var(--left) minmax(0,1fr)}.library{min-width:0;min-height:0;display:flex;flex-direction:column;background:linear-gradient(180deg,#111923,#0c1119);border-right:1px solid #ffffff15}.library-head{min-height:77px;padding:15px 21px 13px;display:flex;align-items:center;justify-content:space-between;gap:12px;border-bottom:1px solid #ffffff0e}.section-title{font-size:19px;font-weight:900;letter-spacing:.07em}.section-sub{font-size:12px;color:var(--muted);margin-top:4px}.library-count{font-size:14px;white-space:nowrap;color:var(--mint);font-weight:900;background:#55edbc10;border:1px solid #55edbc28;border-radius:999px;padding:8px 12px}
-.toolbar{padding:13px 15px 14px;display:grid;gap:10px;border-bottom:1px solid #ffffff0e}.seg-row{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:7px}.seg{height:47px;border-radius:12px;background:#18212e;color:#aebbd0;border:1px solid #283547;font-size:15px;font-weight:800;white-space:nowrap;padding:0 7px}.seg.active{background:linear-gradient(135deg,#164c43,#173c45);border-color:#55edbc99;color:#8fffd5;box-shadow:inset 0 0 0 1px #55edbc18}.search-box{position:relative}.search-icon{position:absolute;left:16px;top:50%;transform:translateY(-50%);font-size:24px;color:#8292a7;pointer-events:none}.search{width:100%;height:52px;border-radius:13px;border:1px solid #2b394c;background:#080d14;padding:0 17px 0 48px;font-size:17px;color:var(--txt)}.search::placeholder{color:#718096}.search:focus{border-color:var(--mint);background:#0c151d}
-.channel-list{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;padding:7px 10px 18px;scrollbar-width:thin;scrollbar-color:#344559 transparent}.channel-item{min-height:67px;display:flex;align-items:center;gap:7px;padding:5px 6px;margin:3px 0;border:1px solid transparent;border-radius:13px;background:transparent;scroll-margin:8px}.channel-item:focus-within{background:#55edbc13;border-color:#55edbc8a;box-shadow:inset 4px 0 var(--mint)}.channel-item.playing{background:linear-gradient(90deg,#55edbc18,#55edbc03);border-color:#55edbc40}.channel-main{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;border:0;border-radius:9px;padding:5px;background:transparent}.channel-main:focus-visible{outline:4px solid var(--mint);outline-offset:-1px;background:#55edbc0c}.channel-number{flex:0 0 30px;text-align:center;font-size:13px;font-weight:900;color:#72839a;font-variant-numeric:tabular-nums}.logo{flex:0 0 49px;width:49px;height:49px;display:grid;place-items:center;overflow:hidden;border-radius:11px;background:linear-gradient(135deg,#243244,#151f2d);border:1px solid #ffffff0b;color:#dfe8f5;font-size:13px;font-weight:950;letter-spacing:-.03em}.logo img{width:100%;height:100%;object-fit:contain;padding:4px}.channel-meta{min-width:0;flex:1}.channel-name{display:block;font-size:17px;line-height:1.2;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.channel-group{display:block;margin-top:5px;font-size:12px;line-height:1.2;color:#8b9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.mini-live{display:inline-flex;align-items:center;gap:6px;font-size:10px;font-weight:950;letter-spacing:.08em;color:var(--mint);white-space:nowrap}.mini-live .led{width:6px;height:6px}.channel-tools{display:flex;gap:3px;flex:0 0 auto}.tool{width:40px;height:44px;border-radius:10px;display:grid;place-items:center;color:#8493a7;font-size:21px;background:#ffffff04;border:1px solid transparent;padding:0}.tool:focus-visible{outline:3px solid var(--mint);outline-offset:1px}.tool.is-fav{color:#ff8fa0}.tool.delete{font-size:24px}.tool:hover{background:#ffffff0c}.empty{height:100%;min-height:200px;display:grid;place-content:center;text-align:center;gap:10px;padding:28px;color:var(--muted)}.empty-symbol{font-size:46px}.empty strong{font-size:19px;color:#e1e8f1}.empty span{font-size:14px}
-.rightcol{min-width:0;min-height:0;display:flex;flex-direction:column;padding:clamp(18px,2.2vw,40px);gap:18px}.nowrow{display:flex;align-items:center;gap:16px;min-width:0;min-height:72px}.now-logo{width:62px;height:62px;flex:0 0 62px;display:grid;place-items:center;border-radius:15px;background:linear-gradient(135deg,#233346,#111b27);border:1px solid #ffffff12;overflow:hidden;font-size:16px;font-weight:950}.now-logo img{height:100%;width:100%;object-fit:contain;padding:5px}.now-info{flex:1;min-width:0}.live-label{font-size:12px;font-weight:950;letter-spacing:.12em;color:var(--mint);display:flex;align-items:center;gap:8px;margin-bottom:5px}.now-name{margin:0;font-weight:900;font-size:clamp(23px,2.1vw,35px);line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.now-group{margin-top:7px;color:var(--muted);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.heart-current{flex:0 0 54px;width:54px;height:54px;border-radius:15px;border:1px solid #324054;background:#131d29;color:#9aabc1;font-size:27px}.heart-current.is-fav{color:#ff849a;background:#ff748810;border-color:#ff74884a}
-.player-stage{flex:1;min-height:0;display:grid;place-items:center}.video-wrap{position:relative;width:100%;max-width:min(100%,calc((100dvh - 270px)*1.7778));max-height:calc(100dvh - 270px);aspect-ratio:16/9;border-radius:18px;overflow:hidden;background:#000;border:1px solid #2a374a;box-shadow:0 30px 90px #0009,0 0 0 1px #ffffff04;display:grid;place-items:center}.video-wrap video{display:block;width:100%;height:100%;background:#000;object-fit:contain}.placeholder{text-align:center;padding:25px;max-width:540px}.placeholder-icon{width:86px;height:86px;display:grid;place-items:center;margin:0 auto 23px;border-radius:25px;background:linear-gradient(135deg,#55edbc,#70aaff);color:#071b17;font-size:39px;box-shadow:0 15px 50px #55edbc22}.placeholder h2{font-size:25px;margin:0 0 10px}.placeholder p{font-size:15px;line-height:1.6;color:#8695aa;margin:0}.player-status{font-size:14px;line-height:1.4;color:#8999ad;text-align:center;min-height:20px}.warning{display:none;max-width:1000px;align-self:center;color:#ffd9a3;background:#ffb84a0c;border:1px solid #ffb84a33;border-radius:12px;padding:12px 16px;font-size:13px}.warning.show{display:block}.controls{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:11px}.player-control{min-width:145px;height:54px;padding:0 19px;border-radius:14px;background:#182331;border:1px solid #344357;font-size:15px;font-weight:850;color:#dbe5f2}.player-control.primary{background:linear-gradient(135deg,#55edbc,#6dc7d7);border-color:transparent;color:#071b17}.player-control:focus-visible{outline:4px solid var(--mint);outline-offset:3px;box-shadow:0 0 0 7px #55edbc22}.keyhelp{display:flex;justify-content:center;gap:23px;flex-wrap:wrap;color:#71839a;font-size:12px;padding-top:1px}.keyhelp b{color:#bac8da;font-weight:800}.toast{position:fixed;left:50%;bottom:27px;transform:translate(-50%,15px);opacity:0;pointer-events:none;z-index:20;padding:13px 19px;border-radius:13px;background:#1c2a38;border:1px solid #52657b;color:#f0f5fc;font-size:15px;box-shadow:0 14px 40px #0008;transition:opacity .18s,transform .18s;max-width:80vw;text-align:center}.toast.show{opacity:1;transform:translate(-50%,0)}
-@media(max-width:1100px){:root{--left:43vw}.logo{width:43px;height:43px;flex-basis:43px}.channel-name{font-size:15px}.channel-item{min-height:61px}.channel-number{flex-basis:23px}.tool{width:34px;height:38px}.rightcol{padding:17px;gap:12px}.player-control{min-width:120px;height:48px}}
-@media(max-width:760px){:root{--top:60px;--left:43vw}.brand{font-size:17px}.brand-mark{width:35px;height:35px}.top-meta{font-size:11px}.layout{grid-template-columns:var(--left) minmax(0,1fr)}.library-head{padding:10px}.section-title{font-size:14px}.section-sub{font-size:10px}.library-count{font-size:11px;padding:6px}.toolbar{padding:8px;gap:7px}.seg{height:39px;font-size:11px}.search{height:42px;font-size:13px;padding-left:39px}.search-icon{font-size:19px;left:12px}.channel-list{padding:4px}.channel-item{gap:3px;min-height:52px;padding:2px}.channel-main{gap:6px;padding:3px}.channel-number{font-size:10px;flex-basis:17px}.logo{width:30px;height:30px;flex-basis:30px;border-radius:7px;font-size:9px}.channel-name{font-size:12px}.channel-group{font-size:9px;margin-top:3px}.mini-live{display:none}.tool{width:25px;height:30px;font-size:14px}.tool.delete{font-size:17px}.rightcol{padding:12px;gap:8px}.nowrow{gap:8px;min-height:48px}.now-logo{width:40px;height:40px;flex-basis:40px;border-radius:9px}.live-label{font-size:9px;margin-bottom:3px}.now-name{font-size:16px}.now-group{font-size:10px;margin-top:3px}.heart-current{width:34px;height:34px;flex-basis:34px;border-radius:9px;font-size:17px}.video-wrap{max-height:calc(100dvh - 195px);border-radius:9px}.placeholder-icon{width:50px;height:50px;font-size:23px;margin-bottom:10px;border-radius:15px}.placeholder h2{font-size:16px}.placeholder p{font-size:10px}.controls{gap:4px}.player-control{min-width:0;flex:1;height:37px;padding:0 5px;font-size:10px;border-radius:9px}.keyhelp{display:none}.player-status{font-size:10px}.warning{font-size:10px;padding:7px}}
-@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+:root{--bg:#080b10;--txt:#f4f7fb;--muted:#91a0b4;--mint:#55edbc}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080b10;color:#f4f7fb;font-family:Roboto,Arial,Helvetica,sans-serif;font-size:17px}
+body{display:flex;flex-direction:column;background:linear-gradient(135deg,#080b10,#0b1018 72%)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:1px solid transparent;background:transparent;padding:0}
+button:focus,input:focus,.channel-main:focus{outline:4px solid #55edbc;outline-offset:2px}
+.topbar{flex:0 0 72px;height:72px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:#0b111a;border-bottom:1px solid rgba(255,255,255,.07)}
+.brand{display:flex;align-items:center;font-weight:900;font-size:23px;letter-spacing:.18em}
+.brand-mark{width:43px;height:43px;border-radius:13px;margin-right:13px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#55edbc,#6ea8ff);color:#051711;font-size:22px;letter-spacing:0}
+.brand small{display:block;color:#8293a9;letter-spacing:.25em;font-size:10px;font-weight:800}
+.top-meta{display:flex;align-items:center;color:#91a0b4;font-size:14px}
+.top-meta>span{margin-left:18px}
+.top-count{color:#e9f1fa;font-weight:800}
+.connection{display:flex;align-items:center;color:#55edbc;font-weight:800;letter-spacing:.05em}
+.led{display:inline-block;width:8px;height:8px;border-radius:50%;background:#55edbc;margin-right:8px}
+.layout{flex:1;min-height:0;display:flex}
+.library{flex:0 0 34%;min-width:410px;max-width:690px;min-height:0;display:flex;flex-direction:column;background:#0f1620;border-right:1px solid rgba(255,255,255,.08)}
+.library-head{flex:0 0 auto;min-height:77px;padding:15px 21px 13px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(255,255,255,.06)}
+.section-title{font-size:19px;font-weight:900;letter-spacing:.07em}
+.section-sub{font-size:12px;color:#91a0b4;margin-top:4px}
+.library-count{font-size:14px;white-space:nowrap;color:#55edbc;font-weight:900;background:rgba(85,237,188,.08);border:1px solid rgba(85,237,188,.2);border-radius:999px;padding:8px 12px}
+.toolbar{flex:0 0 auto;padding:13px 15px 4px;border-bottom:1px solid rgba(255,255,255,.06)}
+.seg-row{display:flex;margin-bottom:10px}
+.seg{flex:1;height:47px;margin-right:7px;border-radius:12px;background:#18212e;color:#aebbd0;border:1px solid #283547;font-size:15px;font-weight:800;white-space:nowrap;padding:0 7px}
+.seg:last-child{margin-right:0}
+.seg.active{background:#164c43;border-color:rgba(85,237,188,.6);color:#8fffd5}
+.search-box{position:relative;margin-bottom:10px}
+.search-icon{position:absolute;left:16px;top:12px;font-size:24px;color:#8292a7}
+.search{width:100%;height:52px;border-radius:13px;border:1px solid #2b394c;background:#080d14;padding:0 17px 0 48px;font-size:17px;color:#f4f7fb}
+.channel-list{flex:1;min-height:0;position:relative;overflow-y:auto;padding:7px 10px 18px}
+.channel-item{display:flex;align-items:center;min-height:67px;padding:5px 6px;margin:3px 0;border:1px solid transparent;border-radius:13px}
+.channel-item.playing{background:rgba(85,237,188,.08);border-color:rgba(85,237,188,.25)}
+.channel-item.focused{background:rgba(85,237,188,.14);border-color:rgba(85,237,188,.7)}
+.channel-main{flex:1;min-width:0;display:flex;align-items:center;text-align:left;border-radius:9px;padding:5px;cursor:pointer}
+.channel-number{flex:0 0 30px;margin-right:12px;text-align:center;font-size:13px;font-weight:900;color:#72839a}
+.logo{flex:0 0 49px;width:49px;height:49px;margin-right:12px;display:flex;align-items:center;justify-content:center;overflow:hidden;border-radius:11px;background:#1c2736;color:#dfe8f5;font-size:13px;font-weight:900}
+.logo img{width:100%;height:100%;object-fit:contain;padding:4px}
+.channel-meta{flex:1;min-width:0}
+.channel-name{display:block;font-size:17px;line-height:1.2;font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.channel-group{display:block;margin-top:5px;font-size:12px;line-height:1.2;color:#8b9bb0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mini-live{display:flex;align-items:center;margin-left:8px;font-size:10px;font-weight:900;letter-spacing:.08em;color:#55edbc;white-space:nowrap}
+.mini-live .led{width:6px;height:6px;margin-right:6px}
+.channel-tools{display:flex;flex:0 0 auto}
+.tool{width:40px;height:44px;margin-left:3px;border-radius:10px;color:#8493a7;font-size:21px;line-height:42px;text-align:center}
+.tool.is-fav{color:#ff8fa0}
+.tool.delete{font-size:24px}
+.empty{padding:60px 28px;text-align:center;color:#91a0b4}
+.empty-symbol{font-size:46px;margin-bottom:10px}
+.empty strong{display:block;font-size:19px;color:#e1e8f1;margin-bottom:8px}
+.empty span{font-size:14px}
+.rightcol{flex:1;min-width:0;min-height:0;display:flex;flex-direction:column;padding:28px 36px}
+.nowrow{flex:0 0 auto;display:flex;align-items:center;min-height:72px;margin-bottom:18px}
+.now-logo{width:62px;height:62px;flex:0 0 62px;margin-right:16px;display:flex;align-items:center;justify-content:center;border-radius:15px;background:#18222f;overflow:hidden;font-size:16px;font-weight:900}
+.now-logo img{width:100%;height:100%;object-fit:contain;padding:5px}
+.now-info{flex:1;min-width:0}
+.live-label{display:flex;align-items:center;font-size:12px;font-weight:900;letter-spacing:.12em;color:#55edbc;margin-bottom:5px}
+.now-name{margin:0;font-weight:900;font-size:30px;line-height:1.1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.now-group{margin-top:7px;color:#91a0b4;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.heart-current{flex:0 0 54px;width:54px;height:54px;margin-left:16px;border-radius:15px;border:1px solid #324054;background:#131d29;color:#9aabc1;font-size:27px;line-height:50px;text-align:center}
+.heart-current.is-fav{color:#ff849a;border-color:rgba(255,116,136,.4)}
+.player-stage{flex:1;min-height:0;display:flex;align-items:center;justify-content:center;margin-bottom:14px}
+.video-wrap{position:relative;width:100%;height:100%;border-radius:18px;overflow:hidden;background:#000;border:1px solid #2a374a;display:flex;align-items:center;justify-content:center}
+.video-wrap video{display:block;width:100%;height:100%;background:#000;object-fit:contain}
+.placeholder{text-align:center;padding:25px;max-width:540px}
+.placeholder-icon{width:86px;height:86px;margin:0 auto 23px;border-radius:25px;background:linear-gradient(135deg,#55edbc,#70aaff);color:#071b17;font-size:39px;line-height:86px;text-align:center}
+.placeholder h2{font-size:25px;margin:0 0 10px}
+.placeholder p{font-size:15px;line-height:1.6;color:#8695aa;margin:0}
+.player-status{flex:0 0 auto;font-size:14px;line-height:1.4;color:#8999ad;text-align:center;min-height:20px;margin-bottom:10px}
+.warning{display:none;flex:0 0 auto;color:#ffd9a3;background:rgba(255,184,74,.08);border:1px solid rgba(255,184,74,.25);border-radius:12px;padding:12px 16px;font-size:13px;margin-bottom:10px}
+.warning.show{display:block}
+.controls{flex:0 0 auto;display:flex;justify-content:center;flex-wrap:wrap}
+.player-control{min-width:145px;height:54px;padding:0 19px;margin:0 6px 8px;border-radius:14px;background:#182331;border:1px solid #344357;font-size:15px;font-weight:800;color:#dbe5f2}
+.player-control.primary{background:#55edbc;border-color:transparent;color:#071b17}
+.keyhelp{flex:0 0 auto;display:flex;justify-content:center;flex-wrap:wrap;color:#71839a;font-size:12px}
+.keyhelp span{margin:0 11px}
+.keyhelp b{color:#bac8da;font-weight:800}
+.toast{position:fixed;left:50%;bottom:27px;margin-left:-200px;width:400px;opacity:0;pointer-events:none;z-index:20;padding:13px 19px;border-radius:13px;background:#1c2a38;border:1px solid #52657b;color:#f0f5fc;font-size:15px;text-align:center;transition:opacity .18s}
+.toast.show{opacity:1}
 </style>
+<script>
+window.onerror=function(m,u,l){try{var d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;top:0;z-index:99;background:#a00;color:#fff;padding:8px;font:14px Arial';d.textContent='Ошибка: '+m+' (строка '+l+')';document.body.appendChild(d)}catch(e){}};
+</script>
 </head>
 <body>
 <header class="topbar">
@@ -54,35 +125,42 @@
 <script>
 (() => {
   'use strict';
+  var KEYMAP={37:'ArrowLeft',38:'ArrowUp',39:'ArrowRight',40:'ArrowDown',13:'Enter',27:'Escape',33:'PageUp',34:'PageDown',46:'Delete',8:'Backspace',427:'ChannelUp',428:'ChannelDown'};
+  function keyName(e){return KEYMAP[e.keyCode]||e.key||''}
+  function pad2(n){return n<10?'0'+n:String(n)}
+  function setWrap(n){var w=document.getElementById('videoWrap');w.innerHTML='';if(n)w.appendChild(n)}
+  function ensureVisible(item){var l=document.getElementById('channelList');if(item.offsetTop<l.scrollTop+4)l.scrollTop=Math.max(0,item.offsetTop-8);else if(item.offsetTop+item.offsetHeight>l.scrollTop+l.clientHeight)l.scrollTop=item.offsetTop+item.offsetHeight-l.clientHeight+8}
+  document.addEventListener('focus',function(e){var r=e.target&&e.target.closest?e.target.closest('.channel-item'):null;var o=document.querySelectorAll('.channel-item.focused');for(var i=0;i<o.length;i++)o[i].classList.remove('focused');if(r)r.classList.add('focused')},true);
+  try{if(window.tizen&&tizen.tvinputdevice){['ChannelUp','ChannelDown'].forEach(function(k){try{tizen.tvinputdevice.registerKey(k)}catch(_e){}})}}catch(_e){}
   const $ = id => document.getElementById(id);
   const state = {channels:[],filtered:[],selected:null,filter:'all',hls:null,avplayActive:false,favorites:new Set(),hidden:new Set(),playlistLabel:'',sourceKey:'all'};
   let playAttempt = 0;
   let hlsLoader = null;
   const STORAGE_FAVS='efir_iptv_favs_v2', STORAGE_HIDDEN='efir_iptv_hidden_v1', STORAGE_SOURCE='efir_iptv_source_v1';
   const BUILTIN=JSON.parse($('embeddedCatalog').textContent);
-  try { state.favorites = new Set(JSON.parse(localStorage.getItem(STORAGE_FAVS)||'[]')); } catch {}
-  try { state.hidden = new Set(JSON.parse(localStorage.getItem(STORAGE_HIDDEN)||'[]')); } catch {}
-  try { state.sourceKey = localStorage.getItem(STORAGE_SOURCE)||'all'; } catch {}
+  try { state.favorites = new Set(JSON.parse(localStorage.getItem(STORAGE_FAVS)||'[]')); } catch(_e){}
+  try { state.hidden = new Set(JSON.parse(localStorage.getItem(STORAGE_HIDDEN)||'[]')); } catch(_e){}
+  try { state.sourceKey = localStorage.getItem(STORAGE_SOURCE)||'all'; } catch(_e){}
   let toastTimer;
   function toast(msg){const t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2400)}
   function setStatus(msg){$('playbackStatus').textContent=msg}
-  function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
   function channelKey(c){return JSON.stringify([c.url,c.name])}
-  function persistFavs(){try{localStorage.setItem(STORAGE_FAVS,JSON.stringify([...state.favorites]))}catch{toast('Браузер не разрешил сохранять избранное.')}}
-  function persistHidden(){try{localStorage.setItem(STORAGE_HIDDEN,JSON.stringify([...state.hidden]))}catch{toast('Браузер не разрешил сохранять список.')}}
-  function persistSource(){try{localStorage.setItem(STORAGE_SOURCE,state.sourceKey)}catch{}}
+  function persistFavs(){try{localStorage.setItem(STORAGE_FAVS,JSON.stringify([...state.favorites]))}catch(_e){toast('Браузер не разрешил сохранять избранное.')}}
+  function persistHidden(){try{localStorage.setItem(STORAGE_HIDDEN,JSON.stringify([...state.hidden]))}catch(_e){toast('Браузер не разрешил сохранять список.')}}
+  function persistSource(){try{localStorage.setItem(STORAGE_SOURCE,state.sourceKey)}catch(_e){}}
   function initials(name){return (name||'TV').split(/\s+/).slice(0,2).map(x=>x[0]||'').join('').toUpperCase()||'TV'}
   function logoMarkup(c){return c.logo?`<img loading="lazy" referrerpolicy="no-referrer" src="${esc(c.logo)}" alt="" onerror="this.remove();this.parentElement.textContent='${esc(initials(c.name))}'">`:esc(initials(c.name))}
   function currentSourceName(){return state.sourceKey==='kino'?'KINO+':state.sourceKey==='vpn'?'VPN':'Все каналы'}
   function loadBuiltin(key,focus=true){
-    key=BUILTIN[key]?key:'all';state.sourceKey=key;persistSource();state.channels=BUILTIN[key].map((c,index)=>({...c,index}));state.selected=null;state.filter='all';state.playlistLabel=key==='all'?'Все каналы':key==='kino'?'KINO+':'VPN';
+    key=BUILTIN[key]?key:'all';state.sourceKey=key;persistSource();state.channels=BUILTIN[key].map((c,index)=>(Object.assign({},c,{index:index})));state.selected=null;state.filter='all';state.playlistLabel=key==='all'?'Все каналы':key==='kino'?'KINO+':'VPN';
     clearVideo();$('nowName').textContent='Выбери телеканал';$('nowGroup').textContent='Нажми OK на канале слева, чтобы начать просмотр';$('nowLogo').textContent='TV';$('liveText').textContent='ГОТОВ К ЭФИРУ';$('favBtn').textContent='♡';$('favBtn').classList.remove('is-fav');setStatus('Каталог загружен. Ожидаю выбор канала.');$('searchInput').value='';updateTabs();renderChannels(focus);updateStats();toast(`Каталог ${currentSourceName()} загружен`)
   }
   function filteredChannels(){const q=$('searchInput').value.trim().toLocaleLowerCase('ru');return state.channels.filter(c=>{const key=channelKey(c),hidden=state.hidden.has(key),fav=state.favorites.has(key);const visible=state.filter==='hidden'?hidden:!hidden;const favOk=state.filter!=='favorites'||fav;const match=!q||[c.name,c.group,c.tvgName,c.id].some(v=>(v||'').toLocaleLowerCase('ru').includes(q));return visible&&favOk&&match})}
   function updateTabs(){document.querySelectorAll('[data-source]').forEach(b=>b.classList.toggle('active',b.dataset.source===state.sourceKey));document.querySelectorAll('[data-filter]').forEach(b=>b.classList.toggle('active',b.dataset.filter===state.filter));$('topCatalog').textContent=state.filter==='favorites'?'Избранное':state.filter==='hidden'?'Удалённые':currentSourceName()}
   function focusRow(index,role='main'){
     const items=$('channelList').querySelectorAll('.channel-item');if(!items.length)return;
-    index=Math.max(0,Math.min(index,items.length-1));const item=items[index];const target=item.querySelector(`[data-role="${role}"]`)||item.querySelector('[data-role="main"]');if(target){target.focus({preventScroll:true});item.scrollIntoView({block:'nearest',behavior:'auto'})}
+    index=Math.max(0,Math.min(index,items.length-1));const item=items[index];const target=item.querySelector(`[data-role="${role}"]`)||item.querySelector('[data-role="main"]');if(target){target.focus({preventScroll:true});ensureVisible(item)}
   }
   function focusChannelKey(key,role='main'){
     const idx=key?state.filtered.findIndex(c=>channelKey(c)===key):-1;focusRow(idx>=0?idx:0,role)
@@ -94,7 +172,7 @@
     list.innerHTML='';state.filtered.forEach((c,i)=>{
       const key=channelKey(c),isHidden=state.hidden.has(key),isFav=state.favorites.has(key),isPlaying=!!state.selected&&channelKey(state.selected)===key;
       const item=document.createElement('div');item.className='channel-item'+(isPlaying?' playing':'');item.dataset.index=String(i);item.setAttribute('role','option');item.setAttribute('aria-selected',isPlaying?'true':'false');
-      const main=document.createElement('button');main.type='button';main.className='channel-main';main.dataset.role='main';main.tabIndex=-1;main.innerHTML=`<span class="channel-number">${String(i+1).padStart(2,'0')}</span><span class="logo">${logoMarkup(c)}</span><span class="channel-meta"><span class="channel-name">${esc(c.name)}</span><span class="channel-group">${esc(c.group||c.source||'Телеканал')}</span></span><span class="mini-live"><span class="led"></span>TV</span>`;main.title='Смотреть '+c.name;main.addEventListener('click',()=>{if(isHidden){toast('Канал удалён. Верни его во вкладке «Удалённые».');return}playChannel(c)});
+      const main=document.createElement('div');main.setAttribute('role','button');main.className='channel-main';main.dataset.role='main';main.tabIndex=-1;main.innerHTML=`<span class="channel-number">${pad2(i+1)}</span><span class="logo">${logoMarkup(c)}</span><span class="channel-meta"><span class="channel-name">${esc(c.name)}</span><span class="channel-group">${esc(c.group||c.source||'Телеканал')}</span></span><span class="mini-live"><span class="led"></span>TV</span>`;main.title='Смотреть '+c.name;main.addEventListener('click',()=>{if(isHidden){toast('Канал удалён. Верни его во вкладке «Удалённые».');return}playChannel(c)});
       const tools=document.createElement('div');tools.className='channel-tools';
       const fav=document.createElement('button');fav.type='button';fav.className='tool'+(isFav?' is-fav':'');fav.dataset.role='fav';fav.tabIndex=-1;fav.textContent=isFav?'♥':'♡';fav.title=isFav?'Убрать из избранного':'Добавить в избранное';fav.setAttribute('aria-label',fav.title);fav.addEventListener('click',()=>toggleFavorite(c));
       const del=document.createElement('button');del.type='button';del.className='tool delete';del.dataset.role='hide';del.tabIndex=-1;del.textContent=isHidden?'↶':'×';del.title=isHidden?'Восстановить канал':'Убрать канал из списка';del.setAttribute('aria-label',del.title);del.addEventListener('click',()=>toggleHidden(c));
@@ -134,21 +212,21 @@
   }
   function clearVideo(){
     stopAvPlay();
-    if(state.hls){try{state.hls.destroy()}catch{}state.hls=null}
+    if(state.hls){try{state.hls.destroy()}catch(_e){}state.hls=null}
     const old=$('videoWrap').querySelector('video');
-    if(old){try{old.pause();old.removeAttribute('src');old.querySelectorAll('source').forEach(s=>s.remove());old.load()}catch{}}
+    if(old){try{old.pause();old.removeAttribute('src');old.querySelectorAll('source').forEach(s=>s.remove());old.load()}catch(_e){}}
     $('videoWrap').innerHTML=`<div class="placeholder"><div class="placeholder-icon">▶</div><h2>Твой экран готов</h2><p>Выбери канал слева и нажми OK на пульте.<br>Здесь появится прямой эфир.</p></div>`;
     $('playerWarning').classList.remove('show');
   }
   function showWarning(msg){$('playerWarning').textContent=msg;$('playerWarning').classList.add('show')}
   function getSamsungAvPlay(){
-    try{return window.webapis&&window.webapis.avplay?window.webapis.avplay:null}catch{return null}
+    try{return window.webapis&&window.webapis.avplay?window.webapis.avplay:null}catch(_e){return null}
   }
   function stopAvPlay(){
     const av=getSamsungAvPlay();
     if(!av||!state.avplayActive)return;
-    try{av.stop()}catch{}
-    try{av.close()}catch{}
+    try{av.stop()}catch(_e){}
+    try{av.close()}catch(_e){}
     state.avplayActive=false;
   }
   function trySamsungAvPlay(url,video,attempt,onSuccess,onFailure){
@@ -158,7 +236,7 @@
     const fail=detail=>{
       if(failed||attempt!==playAttempt)return;
       failed=true;stopAvPlay();
-      if(!video.parentNode)$('videoWrap').replaceChildren(video);
+      if(!video.parentNode)setWrap(video);
       onFailure('Samsung AVPlay: '+String(detail&&detail.message||detail||'не удалось подготовить поток'));
     };
     try{
@@ -168,7 +246,7 @@
       const rect=$('videoWrap').getBoundingClientRect();
       const sx=1920/(window.innerWidth||1920), sy=1080/(window.innerHeight||1080);
       av.setDisplayRect(Math.max(0,Math.round(rect.left*sx)),Math.max(0,Math.round(rect.top*sy)),Math.max(1,Math.round(rect.width*sx)),Math.max(1,Math.round(rect.height*sy)));
-      try{if(typeof av.setDisplayMethod==='function')av.setDisplayMethod('PLAYER_DISPLAY_MODE_LETTER_BOX')}catch{}
+      try{if(typeof av.setDisplayMethod==='function')av.setDisplayMethod('PLAYER_DISPLAY_MODE_LETTER_BOX')}catch(_e){}
       if(typeof av.setListener==='function')av.setListener({
         onbufferingstart:()=>{if(attempt===playAttempt)setStatus('Samsung AVPlay: буферизация потока…')},
         onbufferingcomplete:()=>{if(attempt===playAttempt)setStatus('Samsung AVPlay: буферизация завершена.')},
@@ -176,7 +254,7 @@
         onerror:e=>fail(e||'ошибка нативного плеера')
       });
       // AVPlay renders through Samsung's native media layer, not the HTML <video> element.
-      $('videoWrap').replaceChildren();
+      setWrap(null);
       setStatus('Пробую аппаратный плеер Samsung AVPlay…');
       av.prepareAsync(()=>{
         if(attempt!==playAttempt){stopAvPlay();return}
@@ -186,7 +264,7 @@
       return true;
     }catch(e){
       stopAvPlay();
-      try{av.close()}catch{}
+      try{av.close()}catch(_e){}
       return false;
     }
   }
@@ -207,7 +285,7 @@
       let settled=false,manifestReady=false,timeout=null;
       const h=new window.Hls({enableWorker:false,lowLatencyMode:false,backBufferLength:20,maxBufferLength:20,manifestLoadingTimeOut:12000,fragLoadingTimeOut:15000});
       state.hls=h;if(onStarted)onStarted();
-      const finish=(ok,detail)=>{if(settled)return;settled=true;if(timeout)clearTimeout(timeout);if(!ok){try{h.destroy()}catch{}if(state.hls===h)state.hls=null}resolve({ok,detail})};
+      const finish=(ok,detail)=>{if(settled)return;settled=true;if(timeout)clearTimeout(timeout);if(!ok){try{h.destroy()}catch(_e){}if(state.hls===h)state.hls=null}resolve({ok,detail})};
       timeout=setTimeout(()=>finish(false,'тайм-аут при загрузке HLS'),18000);
       h.on(window.Hls.Events.MEDIA_ATTACHED,()=>{if(attempt===playAttempt)h.loadSource(url)});
       h.on(window.Hls.Events.MANIFEST_PARSED,()=>{
@@ -223,7 +301,7 @@
         if(manifestReady){
           setStatus('Ошибка при получении сегментов HLS.');
           showWarning(describeMediaError(video,url,detail));
-          try{h.destroy()}catch{}if(state.hls===h)state.hls=null;
+          try{h.destroy()}catch(_e){}if(state.hls===h)state.hls=null;
         }else finish(false,detail);
       });
       try{h.attachMedia(video)}catch(e){finish(false,String(e&&e.message||e))}
@@ -234,7 +312,7 @@
     const attempt=++playAttempt;
     state.selected=c;clearVideo();$('nowName').textContent=c.name;$('nowGroup').textContent=(c.group||'Без группы')+(c.source?' · '+c.source:'');$('nowLogo').innerHTML=logoMarkup(c);$('liveText').textContent='ПОДКЛЮЧЕНИЕ';$('favBtn').textContent=state.favorites.has(channelKey(c))?'♥':'♡';$('favBtn').classList.toggle('is-fav',state.favorites.has(channelKey(c)));$('favBtn').title=state.favorites.has(channelKey(c))?'Убрать из избранного':'Добавить в избранное';setStatus('Подключаюсь к потоку…');renderChannels(true,channelKey(c),'main');
     const url=c.url, maybeHls=isHlsCandidate(url), httpsToHttp=location.protocol==='https:'&&/^http:\/\//i.test(url);
-    const v=document.createElement('video');v.controls=true;v.autoplay=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';$('videoWrap').replaceChildren(v);
+    const v=document.createElement('video');v.controls=true;v.autoplay=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';setWrap(v);
     let played=false, hlsMode=false, fallbackStarted=false, failDetail='';
     const finalFailure=(detail)=>{
       if(attempt!==playAttempt||played)return;
@@ -276,9 +354,9 @@
   document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
   $('searchInput').addEventListener('input',()=>renderChannels(false));
   $('favBtn').addEventListener('click',()=>{if(!state.selected){toast('Сначала выбери канал.');return}toggleFavorite(state.selected)});
-  $('playPauseBtn').addEventListener('click',()=>{if(state.avplayActive){const av=getSamsungAvPlay();try{if(av&&av.getState&&av.getState()==='PLAYING')av.pause();else if(av)av.play();return}catch{}}const v=$('videoWrap').querySelector('video');if(!v){toast('Плеер ТВ не предоставляет паузу для этого режима.');return}if(v.paused)v.play().catch(()=>toast('Не удалось запустить поток.'));else v.pause()});
-  $('muteBtn').addEventListener('click',()=>{if(state.avplayActive&&window.tizen&&window.tizen.tvaudiocontrol){try{const audio=window.tizen.tvaudiocontrol,muted=!audio.isMute();audio.setMute(muted);$('muteBtn').textContent=muted?'🔇 Без звука':'🔊 Звук';toast(muted?'Звук выключен':'Звук включён');return}catch{}}const v=$('videoWrap').querySelector('video');if(!v){toast('В этом режиме приложение не даёт управлять звуком отсюда. Используй кнопку Mute на пульте.');return}v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇 Без звука':'🔊 Звук';toast(v.muted?'Звук выключен':'Звук включён')});
-  $('fullscreenBtn').addEventListener('click',()=>{const w=$('videoWrap'),v=w.querySelector('video');if(v&&typeof v.webkitEnterFullscreen==='function'){try{v.webkitEnterFullscreen();return}catch{}}if(w.requestFullscreen)w.requestFullscreen().catch(()=>toast('Полный экран не поддерживается этим браузером.'));else toast('Полный экран не поддерживается этим браузером.')});
+  $('playPauseBtn').addEventListener('click',()=>{if(state.avplayActive){const av=getSamsungAvPlay();try{if(av&&av.getState&&av.getState()==='PLAYING')av.pause();else if(av)av.play();return}catch(_e){}}const v=$('videoWrap').querySelector('video');if(!v){toast('Плеер ТВ не предоставляет паузу для этого режима.');return}if(v.paused)v.play().catch(()=>toast('Не удалось запустить поток.'));else v.pause()});
+  $('muteBtn').addEventListener('click',()=>{if(state.avplayActive&&window.tizen&&window.tizen.tvaudiocontrol){try{const audio=window.tizen.tvaudiocontrol,muted=!audio.isMute();audio.setMute(muted);$('muteBtn').textContent=muted?'🔇 Без звука':'🔊 Звук';toast(muted?'Звук выключен':'Звук включён');return}catch(_e){}}const v=$('videoWrap').querySelector('video');if(!v){toast('В этом режиме приложение не даёт управлять звуком отсюда. Используй кнопку Mute на пульте.');return}v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇 Без звука':'🔊 Звук';toast(v.muted?'Звук выключен':'Звук включён')});
+  $('fullscreenBtn').addEventListener('click',()=>{const w=$('videoWrap'),v=w.querySelector('video');if(v&&typeof v.webkitEnterFullscreen==='function'){try{v.webkitEnterFullscreen();return}catch(_e){}}if(w.requestFullscreen)w.requestFullscreen().catch(()=>toast('Полный экран не поддерживается этим браузером.'));else toast('Полный экран не поддерживается этим браузером.')});
   $('openStreamBtn').addEventListener('click',()=>{if(!state.selected){toast('Сначала выбери канал.');return}playChannel(state.selected,true);setStatus('Повторный прямой запуск в том же окне…')});
 
   const sourceButtons=()=>[...document.querySelectorAll('[data-source]')],filterButtons=()=>[...document.querySelectorAll('[data-filter]')],playerButtons=()=>[...document.querySelectorAll('.player-control')];
@@ -286,8 +364,9 @@
   function focusSelected(){if(state.selected){const idx=state.filtered.findIndex(c=>channelKey(c)===channelKey(state.selected));if(idx>=0){focusRow(idx,'main');return}}focusRow(0,'main')}
   function tuneRelative(delta){if(!state.filtered.length)return;let idx=focusedChannelIndex(document.activeElement);if(idx<0&&state.selected)idx=state.filtered.findIndex(c=>channelKey(c)===channelKey(state.selected));if(idx<0)idx=0;const next=Math.max(0,Math.min(state.filtered.length-1,idx+delta));const c=state.filtered[next];if(c&&!state.hidden.has(channelKey(c))){playChannel(c);focusRow(next,'main')}}
   document.addEventListener('keydown',e=>{
-    const key=e.key, target=e.target, tag=(target.tagName||'').toLowerCase();
+    const key=keyName(e), target=e.target, tag=(target.tagName||'').toLowerCase();
     const row=target.closest&&target.closest('.channel-item');
+    if(key==='Enter'&&target.tagName==='DIV'&&target.getAttribute&&target.getAttribute('data-role')){e.preventDefault();target.click();return}
     if(row){const idx=Number(row.dataset.index),role=target.dataset.role||'main';
       if(key==='ArrowUp'||key==='ArrowDown'){e.preventDefault();const next=idx+(key==='ArrowUp'?-1:1);if(next<0){$('searchInput').focus({preventScroll:true});return}if(next>=state.filtered.length)return;focusRow(next,role);return}
       if(key==='ArrowRight'){e.preventDefault();if(role==='main')focusActionRow(target,'fav');else if(role==='fav')focusActionRow(target,'hide');else $('playPauseBtn').focus({preventScroll:true});return}
