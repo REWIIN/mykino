@@ -1,302 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>LUSTRA</title>
+<meta name="theme-color" content="#0b1018">
+<title>ЭФИР — TV каталог</title>
 <style>
-html,body{margin:0;padding:0;height:100%;background:#141414;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
-#app{display:flex;flex-direction:column;height:100%}
-#top{height:80px;flex:none;display:flex;align-items:center;padding:0 60px}
-#logo{font-size:40px;font-weight:bold;color:#e50914;letter-spacing:4px}
-#info{height:200px;flex:none;padding:0 60px;overflow:hidden}
-#itTitle{font-size:44px;font-weight:bold;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-#itYear{font-size:24px;color:#aaa;margin-bottom:10px;height:30px}
-#itDesc{font-size:24px;line-height:32px;color:#ddd;max-height:128px;overflow:hidden}
-#wrap{flex:1;position:relative;overflow:hidden;padding:0 46px}
-#cards{display:flex;flex-wrap:wrap;padding-top:24px;padding-bottom:240px}
-.card{width:200px;margin:0 14px 28px;flex:none;transition:transform .15s}
-.poster{width:200px;height:300px;box-sizing:border-box;border:4px solid transparent;background:#2a2a2a;overflow:hidden}
-.poster img{width:100%;height:100%;object-fit:cover;display:block}
-.ctitle{margin-top:10px;font-size:20px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.card.focus{transform:scale(1.08)}
-.card.focus .poster{border-color:#fff}
-.card.focus .ctitle{color:#fff}
-#msg{display:none;position:fixed;left:0;right:0;top:45%;text-align:center;font-size:36px;z-index:20;text-shadow:0 0 10px #000}
-#player{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:10}
-#player.on{display:block}
-#vid{width:100%;height:100%;background:#000;display:block}
-#ovl{position:absolute;left:0;right:0;bottom:0;padding:40px 60px;background:rgba(0,0,0,.75);opacity:0;transition:opacity .3s}
-#ovl.on{opacity:1}
-#pTitle{font-size:32px}
-#pBar{height:8px;background:#555;margin-top:16px}
-#pFill{height:8px;background:#e50914;width:0}
-#pTime{font-size:24px;color:#ccc;margin-top:10px}
+:root{--bg:#0b1018;--panel:#131b27;--panel2:#182333;--line:#263447;--muted:#9baabd;--text:#edf3fb;--accent:#e33d4e;--mint:#4fe0bd;--gold:#f0c674}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 65% -20%,#263449 0,transparent 48%),var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}
+button,input{font:inherit}button{cursor:pointer}a{color:inherit}.topbar{height:72px;display:flex;align-items:center;justify-content:space-between;gap:18px;padding:0 clamp(16px,4vw,54px);border-bottom:1px solid #ffffff14;background:#0b1018d9;backdrop-filter:blur(16px);position:sticky;top:0;z-index:10}.brand{display:flex;align-items:center;gap:11px;font-size:1.12rem;font-weight:950;letter-spacing:.15em}.brand-mark{display:grid;place-items:center;width:34px;height:34px;border-radius:11px;background:var(--accent);color:white;font-size:16px;letter-spacing:0;box-shadow:0 6px 22px #e33d4e33}.brand span{color:var(--mint)}.topmeta{display:flex;align-items:center;gap:9px;color:var(--muted);font-size:.82rem}.live-dot{width:8px;height:8px;background:var(--accent);border-radius:50%;box-shadow:0 0 0 5px #e33d4e20;display:inline-block}
+main{max-width:1400px;margin:auto;padding:28px clamp(14px,3.4vw,48px) 54px}.intro{display:flex;align-items:end;justify-content:space-between;gap:20px;margin-bottom:22px}.kicker{color:var(--mint);font-size:.75rem;text-transform:uppercase;font-weight:850;letter-spacing:.19em}.intro h1{font-size:clamp(2rem,4vw,3.25rem);line-height:1.05;letter-spacing:-.04em;margin:8px 0}.intro p{color:var(--muted);max-width:680px;margin:10px 0 0}.channel-count{border:1px solid var(--line);background:#101722;border-radius:14px;padding:13px 17px;white-space:nowrap;color:var(--muted);font-size:.85rem}.channel-count strong{display:block;color:var(--text);font-size:1.25rem}
+.layout{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(300px,.85fr);gap:18px;align-items:start}.panel{background:linear-gradient(145deg,#151e2b,#101722);border:1px solid #ffffff13;border-radius:20px;overflow:hidden;box-shadow:0 20px 70px #0002}.player-head{padding:17px 19px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #ffffff0e}.now-title{font-size:1rem;font-weight:850}.now-sub{color:var(--muted);font-size:.8rem;margin-top:2px}.onair{font-size:.7rem;font-weight:900;color:#fff;background:var(--accent);border-radius:5px;padding:4px 7px;letter-spacing:.06em}.screen{aspect-ratio:16/9;background:linear-gradient(135deg,#101722,#070a10);position:relative;display:grid;place-items:center;min-height:240px}.screen iframe{width:100%;height:100%;border:0;position:absolute;inset:0;background:#080b10}.screen-empty{text-align:center;padding:28px;max-width:420px}.tv-icon{width:74px;height:58px;border:2px solid #57687c;border-radius:12px;margin:0 auto 18px;display:grid;place-items:center;color:var(--mint);font-size:1.8rem;position:relative}.tv-icon:after{content:"";position:absolute;width:24px;height:2px;bottom:-8px;background:#57687c;border-radius:2px}.screen-empty h2{margin:0 0 7px;font-size:1.15rem}.screen-empty p{color:var(--muted);font-size:.88rem;margin:0}.player-actions{display:flex;flex-wrap:wrap;gap:9px;padding:14px 17px;border-top:1px solid #ffffff0e}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border:1px solid var(--line);border-radius:10px;padding:10px 13px;color:var(--text);background:#1a2636;text-decoration:none;font-weight:750;font-size:.84rem}.btn:hover{border-color:#4e647d;background:#223248}.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}.btn.primary:hover{filter:brightness(1.08)}.btn.soft{background:#0c131d}.status{padding:0 18px 15px;color:var(--muted);font-size:.78rem;min-height:34px}.status strong{color:var(--gold)}
+.catalog{min-width:0}.catalog-head{padding:16px;border-bottom:1px solid #ffffff0e}.catalog-title{font-size:1rem;font-weight:900;margin-bottom:13px}.search{width:100%;border-radius:11px;background:#0b111a;border:1px solid #2d3a4d;padding:12px 13px;color:var(--text);outline:none}.search:focus{border-color:var(--mint);box-shadow:0 0 0 3px #4fe0bd14}.filters{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}.filter{background:#101925;color:#9dacc0;border:1px solid #27364a;border-radius:999px;padding:7px 10px;font-size:.75rem;font-weight:800}.filter.active{background:#203f3a;border-color:#34675f;color:#a9fbe5}.list{padding:8px;display:grid;gap:5px;max-height:650px;overflow:auto}.channel{width:100%;display:flex;align-items:center;text-align:left;gap:12px;padding:11px;border:1px solid transparent;border-radius:13px;background:transparent;color:var(--text)}.channel:hover{background:#ffffff08}.channel.selected{background:linear-gradient(100deg,#203a3a,#172535);border-color:#38645d}.logo{flex:0 0 45px;width:45px;height:45px;display:grid;place-items:center;border-radius:12px;background:linear-gradient(145deg,#26374a,#162433);font-size:.82rem;font-weight:950;letter-spacing:-.03em;color:#d9e8f8;border:1px solid #ffffff10}.logo.red{background:linear-gradient(145deg,#a92e43,#4f1e2b)}.logo.green{background:linear-gradient(145deg,#267a6c,#17493f)}.logo.blue{background:linear-gradient(145deg,#235a9e,#192b49)}.channel-info{min-width:0;flex:1}.channel-name{font-weight:850;font-size:.9rem;display:flex;align-items:center;gap:7px;flex-wrap:wrap}.channel-desc{color:var(--muted);font-size:.75rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}.tag{font-size:.62rem;font-weight:850;letter-spacing:.04em;border:1px solid #344355;color:#a9b8c9;border-radius:5px;padding:2px 5px}.tag.ru{border-color:#2e675d;color:#91ead5}.play-arrow{color:#6f8399;font-size:1.2rem;padding:0 4px}.channel.selected .play-arrow{color:var(--mint)}.empty-results{padding:26px 16px;text-align:center;color:var(--muted);font-size:.86rem}.section{margin-top:23px}.section-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:12px}.section-head h2{font-size:1.05rem;margin:0}.section-head p{color:var(--muted);font-size:.8rem;margin:0}.provider-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:11px}.provider{display:flex;flex-direction:column;gap:7px;padding:16px;border:1px solid #ffffff13;border-radius:15px;background:#121a25;text-decoration:none;transition:.15s}.provider:hover{background:#192536;border-color:#40536a;transform:translateY(-1px)}.provider strong{font-size:.9rem}.provider span{color:var(--muted);font-size:.78rem}.provider em{font-style:normal;color:var(--mint);font-size:.75rem;font-weight:800}.footnote{color:#8190a3;font-size:.78rem;margin-top:16px;border-top:1px solid #ffffff10;padding-top:14px}.footer{padding:20px;text-align:center;color:#6e7f93;font-size:.74rem}
+@media(max-width:980px){.layout{grid-template-columns:1fr}.list{max-height:none;grid-template-columns:repeat(2,minmax(0,1fr))}.channel{align-items:flex-start}.intro{align-items:flex-start}.channel-count{display:none}}
+@media(max-width:620px){.topbar{height:62px}.topmeta .meta-text{display:none}main{padding-top:21px}.intro h1{font-size:2.35rem}.list{grid-template-columns:1fr}.screen{min-height:210px}.provider-grid{grid-template-columns:1fr}.player-head{padding:14px}.channel{padding:10px}.player-actions .btn{flex:1}.section-head{align-items:flex-start;flex-direction:column}}
 </style>
 </head>
 <body>
-<div id="app">
-  <div id="top"><div id="logo">LUSTRA</div></div>
-  <div id="info">
-    <div id="itTitle"></div>
-    <div id="itYear"></div>
-    <div id="itDesc"></div>
+<header class="topbar">
+  <div class="brand"><div class="brand-mark">▶</div>ЭФИР<span>БАКУ</span></div>
+  <div class="topmeta"><span class="live-dot"></span><span class="meta-text">Каталог публичных эфиров</span><span>·</span><span>RU / AZ</span></div>
+</header>
+<main>
+  <section class="intro">
+    <div><div class="kicker">ТВ как у провайдера — прямо в браузере</div><h1>Выбирай канал.<br>Смотри эфир.</h1><p>Русскоязычные телеканалы и открытые эфиры азербайджанских вещателей. Выбирай канал из списка — сайт попробует открыть его официальный плеер.</p></div>
+    <div class="channel-count"><strong id="count">9 каналов</strong>в каталоге</div>
+  </section>
+  <div class="layout">
+    <section class="panel" aria-label="Видеоплеер">
+      <div class="player-head"><div><div class="now-title" id="nowTitle">Выбери телеканал</div><div class="now-sub" id="nowSub">Официальная трансляция</div></div><span class="onair">● ЭФИР</span></div>
+      <div class="screen" id="screen"><div class="screen-empty"><div class="tv-icon">▶</div><h2>Твой телевизор уже здесь</h2><p>Нажми на канал справа. Если вещатель запрещает встраивание, открой его сайт отдельной вкладкой.</p></div></div>
+      <div class="player-actions"><a class="btn primary" id="openSource" href="https://az.mir24.tv/live" target="_blank" rel="noopener noreferrer">↗ Открыть эфир отдельно</a><button class="btn" id="reloadBtn" type="button">⟳ Перезагрузить</button><button class="btn soft" id="clearBtn" type="button">× Сбросить плеер</button></div>
+      <div class="status" id="status" role="status" aria-live="polite">Готов к запуску. Некоторые сайты блокируют просмотр во встроенном окне — это ограничение самого вещателя.</div>
+    </section>
+    <section class="panel catalog" aria-label="Каталог телеканалов">
+      <div class="catalog-head"><div class="catalog-title">Список каналов</div><input class="search" id="search" type="search" placeholder="Найти канал…" aria-label="Найти канал"><div class="filters" id="filters"><button class="filter active" data-filter="all">Все</button><button class="filter" data-filter="ru">Русскоязычные</button><button class="filter" data-filter="az">Местные</button><button class="filter" data-filter="news">Новости</button><button class="filter" data-filter="favorites">★ Избранное</button></div></div>
+      <div class="list" id="channelList"></div>
+    </section>
   </div>
-  <div id="wrap"><div id="cards"></div></div>
-</div>
-<div id="msg"></div>
-<div id="player">
-  <video id="vid"></video>
-  <div id="ovl">
-    <div id="pTitle"></div>
-    <div id="pBar"><div id="pFill"></div></div>
-    <div id="pTime"></div>
-  </div>
-</div>
-
+  <section class="section">
+    <div class="section-head"><h2>Каталоги местных провайдеров</h2><p>Для платных пакетов может потребоваться подписка оператора</p></div>
+    <div class="provider-grid">
+      <a class="provider" href="https://www.citynettv.az/?lang=ru" target="_blank" rel="noopener noreferrer"><strong>CityNet TV</strong><span>Официальный каталог телеканалов на нескольких языках</span><em>Открыть каталог ↗</em></a>
+      <a class="provider" href="https://ott.tvnet.az/kanallar/" target="_blank" rel="noopener noreferrer"><strong>TVNET</strong><span>Список каналов и пакетов сервиса</span><em>Открыть список ↗</em></a>
+      <a class="provider" href="https://backend.aile.tv/az/nav/trafli" target="_blank" rel="noopener noreferrer"><strong>Ailə TV</strong><span>Информация о кабельном и цифровом ТВ</span><em>Открыть сайт ↗</em></a>
+    </div>
+    <div class="footnote">Сайт не хранит и не ретранслирует видео: в нём используются страницы вещателей и публичных ТВ-платформ. Доступность зависит от региона, состояния эфира и правил конкретного сайта. Платные каналы не разблокируются.</div>
+  </section>
+</main>
+<div class="footer">ЭФИР БАКУ · Локальный HTML-каталог · Ссылки ведут к источникам вещателей</div>
 <script>
-var items = [];
-var cur = 0;
-var inPlayer = false;
-var ovlTimer = null;
-
-var elCards = document.getElementById('cards');
-var elWrap = document.getElementById('wrap');
-var elMsg = document.getElementById('msg');
-var vid = document.getElementById('vid');
-var elPlayer = document.getElementById('player');
-var elOvl = document.getElementById('ovl');
-
-function showMsg(t) {
-  if (t) { elMsg.textContent = t; elMsg.style.display = 'block'; }
-  else { elMsg.style.display = 'none'; }
+const channels = [
+ {id:'cbc',name:'CBC TV',short:'CBC',desc:'Русскоязычные новости Азербайджана',category:'ru',tags:['ru','news'],url:'https://cbctv.az/info/pages/tv-live',logo:'blue',note:'Официальный эфир CBC TV Azerbaijan. Канал заявляет круглосуточное русскоязычное вещание.'},
+ {id:'mir',name:'МИР / МИР 24',short:'МИР',desc:'Новости, фильмы и передачи на русском',category:'ru',tags:['ru','news'],url:'https://az.mir24.tv/live',logo:'red',note:'Официальная региональная страница МТРК «Мир» для Азербайджана; внутри страницы доступны МИР и МИР 24.'},
+ {id:'rtvi',name:'RTVI',short:'RTVI',desc:'Информационный и общественный канал',category:'ru',tags:['ru','news'],url:'https://rtvi.com/live/',logo:'blue',note:'Официальная страница прямого эфира RTVI. На странице вещателя указана реклама.'},
+ {id:'baku',name:'Baku TV',short:'BAKU',desc:'Новости на азербайджанском и русском',category:'az',tags:['az','ru','news'],url:'https://baku.tv/live',logo:'red',note:'Официальный live-раздел Baku TV; часть материалов и эфиров доступна на русском языке.'},
+ {id:'aztv',name:'AzTV',short:'AzTV',desc:'Национальное телевидение Азербайджана',category:'az',tags:['az'],url:'https://aztv.az/ru/live',logo:'blue',note:'Официальная страница прямого эфира AzTV.'},
+ {id:'tvstream',name:'TVSTREAM.az',short:'TVS',desc:'Местные каналы: Xəzər, AZTV, İctimai и другие',category:'az',tags:['az','news'],url:'https://tvstream.az/',logo:'green',note:'Публичная платформа местных каналов. Выбор конкретного канала может выполняться внутри страницы TVSTREAM.'},
+ {id:'yoda',name:'Yoda.az',short:'YODA',desc:'Каталог местных телеканалов и архив',category:'az',tags:['az'],url:'https://yoda.az/',logo:'green',note:'Местная ТВ-платформа с каталогом телеканалов. Выбирай канал во встроенном интерфейсе.'},
+ {id:'real',name:'REAL TV',short:'REAL',desc:'Информационный канал Азербайджана',category:'az',tags:['az','news'],url:'https://realtv.tvstream.az/',logo:'red',note:'Страница прямого эфира REAL TV на платформе TVSTREAM.'},
+ {id:'soloviev',name:'СОЛОВЬЁВ LIVE',short:'LIVE',desc:'Информационно-аналитический эфир на русском',category:'ru',tags:['ru','news'],url:'https://soloviev.live/',logo:'red',note:'Официальная страница канала. Видеопоток может загружаться через внешнюю платформу VK.'},
+ {id:'rbc',name:'РБК ТВ',short:'РБК',desc:'Бизнес, рынки и экономика',category:'ru',tags:['ru','news'],url:'https://tv.rbc.ru/streams',logo:'blue',note:'Официальная страница РБК. Если на сайте нет активной трансляции, эфир может быть временно недоступен.'}
+];
+const list = document.getElementById('channelList');
+const screen = document.getElementById('screen');
+const status = document.getElementById('status');
+const openSource = document.getElementById('openSource');
+let current = null, filter = 'all', query = '';
+let favorites = [];
+try { favorites = JSON.parse(localStorage.getItem('efirBakuFavs') || '[]'); } catch {}
+function render(){
+ const found = channels.filter(c => {
+   const matchesText = (c.name+' '+c.desc+' '+c.note).toLowerCase().includes(query.toLowerCase());
+   const matchesFilter = filter==='all' || (filter==='favorites' ? favorites.includes(c.id) : c.tags.includes(filter));
+   return matchesText && matchesFilter;
+ });
+ document.getElementById('count').textContent = channels.length+' каналов';
+ list.innerHTML = '';
+ if(!found.length){list.innerHTML='<div class="empty-results">Ничего не найдено. Попробуй другой запрос.</div>';return;}
+ for(const c of found){
+  const b = document.createElement('button'); b.type='button'; b.className='channel'+(current?.id===c.id?' selected':'');
+  b.setAttribute('aria-pressed', current?.id===c.id?'true':'false');
+  const logo = document.createElement('span'); logo.className='logo '+c.logo; logo.textContent=c.short;
+  const info = document.createElement('span'); info.className='channel-info';
+  const name = document.createElement('span'); name.className='channel-name'; name.textContent=c.name;
+  if(c.tags.includes('ru')) {const tag=document.createElement('span');tag.className='tag ru';tag.textContent='RU';name.appendChild(tag);}
+  const desc = document.createElement('span'); desc.className='channel-desc'; desc.textContent=c.desc;
+  info.append(name,desc);
+  const star = document.createElement('span'); star.className='play-arrow'; star.textContent=favorites.includes(c.id)?'★':'›'; star.title=favorites.includes(c.id)?'В избранном':'Открыть';
+  b.append(logo,info,star);
+  b.addEventListener('click',()=>play(c));
+  b.addEventListener('contextmenu', e=>{e.preventDefault();toggleFavorite(c.id);});
+  // A separate star action via double-click keeps single click intuitive for channel selection.
+  star.style.cursor='pointer'; star.addEventListener('click',e=>{e.stopPropagation();toggleFavorite(c.id);});
+  star.setAttribute('aria-label','Добавить или убрать из избранного');
+  list.appendChild(b);
+ }
 }
-
-function getJSON(url, cb) {
-  var x = new XMLHttpRequest();
-  x.open('GET', url, true);
-  x.timeout = 20000;
-  x.onreadystatechange = function () {
-    if (x.readyState !== 4) return;
-    if (x.status >= 200 && x.status < 300) {
-      try { cb(null, JSON.parse(x.responseText)); }
-      catch (e) { cb('parse'); }
-    } else { cb('http ' + x.status); }
-  };
-  x.ontimeout = function () { cb('timeout'); };
-  x.send();
+function play(c){
+ current=c;
+ document.getElementById('nowTitle').textContent=c.name;
+ document.getElementById('nowSub').textContent=c.desc;
+ openSource.href=c.url;
+ screen.innerHTML='';
+ const frame=document.createElement('iframe');
+ frame.src=c.url; frame.title='Официальный эфир: '+c.name;
+ frame.allow='autoplay; fullscreen; picture-in-picture; encrypted-media';
+ frame.allowFullscreen=true; frame.referrerPolicy='strict-origin-when-cross-origin';
+ screen.appendChild(frame);
+ status.innerHTML='<strong>Загружаю источник.</strong> '+c.note+' Если плеер пустой, нажми «Открыть эфир отдельно». Это бывает из-за запрета встраивания у самого сайта.';
+ render();
+ try { localStorage.setItem('efirBakuLast', c.id); } catch {}
 }
-
-function clean(s) {
-  if (s instanceof Array) s = s.join(' ');
-  s = String(s || '');
-  s = s.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
-       .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ');
-  s = s.replace(/^\s+|\s+$/g, '');
-  if (s.length > 400) s = s.substring(0, 400) + '...';
-  return s;
+function toggleFavorite(id){
+ favorites=favorites.includes(id)?favorites.filter(x=>x!==id):[...favorites,id];
+ try{localStorage.setItem('efirBakuFavs',JSON.stringify(favorites));}catch{}
+ render();
 }
-
-function first(v) {
-  if (v instanceof Array) return v[0];
-  return v;
-}
-
-function loadCatalog() {
-  showMsg('Загрузка каталога...');
-  var q = 'collection:feature_films AND mediatype:movies';
-  var url = 'https://archive.org/advancedsearch.php?q=' + encodeURIComponent(q) +
-    '&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=year&fl%5B%5D=description' +
-    '&sort%5B%5D=downloads%20desc&rows=48&page=1&output=json';
-  getJSON(url, function (err, data) {
-    if (err || !data || !data.response) {
-      showMsg('Не удалось загрузить каталог (' + err + '). Нажмите OK, чтобы повторить.');
-      return;
-    }
-    showMsg('');
-    var docs = data.response.docs;
-    items = [];
-    for (var i = 0; i < docs.length; i++) {
-      var d = docs[i];
-      items.push({
-        id: d.identifier,
-        title: clean(first(d.title)) || d.identifier,
-        year: first(d.year) || '',
-        desc: clean(d.description) || 'Описание пока недоступно.',
-        poster: 'https://archive.org/services/img/' + d.identifier
-      });
-    }
-    renderCards();
-    setFocus(0);
-  });
-}
-
-function renderCards() {
-  elCards.innerHTML = '';
-  for (var i = 0; i < items.length; i++) {
-    var c = document.createElement('div');
-    c.className = 'card';
-    var p = document.createElement('div');
-    p.className = 'poster';
-    var img = document.createElement('img');
-    img.src = items[i].poster;
-    img.onerror = function () { this.style.display = 'none'; };
-    p.appendChild(img);
-    var t = document.createElement('div');
-    t.className = 'ctitle';
-    t.textContent = items[i].title;
-    c.appendChild(p);
-    c.appendChild(t);
-    elCards.appendChild(c);
-  }
-}
-
-function setFocus(n) {
-  if (!items.length) return;
-  if (n < 0) n = 0;
-  if (n > items.length - 1) n = items.length - 1;
-  var cards = elCards.children;
-  if (cards[cur]) cards[cur].className = 'card';
-  cur = n;
-  var el = cards[cur];
-  el.className = 'card focus';
-  document.getElementById('itTitle').textContent = items[cur].title;
-  document.getElementById('itYear').textContent = items[cur].year;
-  document.getElementById('itDesc').textContent = items[cur].desc;
-  var top = el.offsetTop;
-  var bottom = top + el.offsetHeight + 30;
-  if (top < elWrap.scrollTop) elWrap.scrollTop = top - 24;
-  else if (bottom > elWrap.scrollTop + elWrap.clientHeight) elWrap.scrollTop = bottom - elWrap.clientHeight + 24;
-}
-
-function columns() {
-  var cards = elCards.children;
-  if (!cards.length) return 1;
-  var t = cards[0].offsetTop, n = 0;
-  for (var i = 0; i < cards.length; i++) {
-    if (cards[i].offsetTop === t) n++; else break;
-  }
-  return n || 1;
-}
-
-function fmt(s) {
-  if (!s || isNaN(s)) s = 0;
-  s = Math.floor(s);
-  var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
-  return (h ? h + ':' : '') + (m < 10 && h ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x;
-}
-
-function showOvl() {
-  elOvl.className = 'on';
-  if (ovlTimer) clearTimeout(ovlTimer);
-  ovlTimer = setTimeout(function () { elOvl.className = ''; }, 4000);
-}
-
-function updateBar() {
-  var d = vid.duration || 0;
-  var t = vid.currentTime || 0;
-  document.getElementById('pFill').style.width = (d ? (t / d * 100) : 0) + '%';
-  document.getElementById('pTime').textContent = fmt(t) + ' / ' + fmt(d);
-}
-
-function pickFile(files) {
-  var best = null, any = null, i, f;
-  for (i = 0; i < files.length; i++) {
-    f = files[i];
-    if (!f.name || !/\.mp4$/i.test(f.name)) continue;
-    if (!any) any = f;
-    if (String(f.format).toLowerCase() === 'h.264' && !best) best = f;
-  }
-  return best || any;
-}
-
-function openPlayer(item) {
-  showMsg('Подготовка видео...');
-  getJSON('https://archive.org/metadata/' + item.id, function (err, data) {
-    if (err || !data || !data.files) { showMsg('Ошибка: ' + err); setTimeout(function () { showMsg(''); }, 3000); return; }
-    var f = pickFile(data.files);
-    if (!f) { showMsg('У этого фильма нет MP4-файла'); setTimeout(function () { showMsg(''); }, 3000); return; }
-    var parts = f.name.split('/');
-    for (var i = 0; i < parts.length; i++) parts[i] = encodeURIComponent(parts[i]);
-    var url = 'https://archive.org/download/' + item.id + '/' + parts.join('/');
-    inPlayer = true;
-    elPlayer.className = 'on';
-    document.getElementById('pTitle').textContent = item.title;
-    vid.src = url;
-    vid.play();
-    showMsg('Загрузка видео...');
-    showOvl();
-  });
-}
-
-function closePlayer() {
-  inPlayer = false;
-  vid.pause();
-  vid.removeAttribute('src');
-  vid.load();
-  elPlayer.className = '';
-  elOvl.className = '';
-  showMsg('');
-}
-
-vid.addEventListener('playing', function () { showMsg(''); });
-vid.addEventListener('waiting', function () { showMsg('Буферизация...'); });
-vid.addEventListener('timeupdate', updateBar);
-vid.addEventListener('error', function () { showMsg('Не удалось воспроизвести это видео'); });
-vid.addEventListener('ended', closePlayer);
-
-function seek(sec) {
-  var t = (vid.currentTime || 0) + sec;
-  if (t < 0) t = 0;
-  vid.currentTime = t;
-  showOvl();
-}
-
-function togglePlay() {
-  if (vid.paused) vid.play(); else vid.pause();
-  showOvl();
-}
-
-document.addEventListener('keydown', function (e) {
-  var k = e.keyCode;
-  if (inPlayer) {
-    if (k === 10009 || k === 8 || k === 27 || k === 413) { closePlayer(); }
-    else if (k === 13 || k === 32 || k === 10252) { togglePlay(); }
-    else if (k === 415) { vid.play(); showOvl(); }
-    else if (k === 19) { vid.pause(); showOvl(); }
-    else if (k === 37) { seek(-10); }
-    else if (k === 39) { seek(10); }
-    else if (k === 412) { seek(-30); }
-    else if (k === 417) { seek(30); }
-    else if (k === 38 || k === 40) { showOvl(); }
-    else { return; }
-    e.preventDefault();
-    return;
-  }
-  if (!items.length) {
-    if (k === 13) loadCatalog();
-    return;
-  }
-  var cols = columns();
-  if (k === 37) setFocus(cur - 1);
-  else if (k === 39) setFocus(cur + 1);
-  else if (k === 38) setFocus(cur - cols);
-  else if (k === 40) setFocus(cur + cols > items.length - 1 ? items.length - 1 : cur + cols);
-  else if (k === 13) openPlayer(items[cur]);
-  else return;
-  e.preventDefault();
-});
-
-try {
-  if (window.tizen && tizen.tvinputdevice) {
-    var keys = ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop'];
-    for (var i = 0; i < keys.length; i++) {
-      try { tizen.tvinputdevice.registerKey(keys[i]); } catch (e) {}
-    }
-  }
-} catch (e) {}
-
-loadCatalog();
+document.getElementById('search').addEventListener('input',e=>{query=e.target.value.trim();render();});
+document.getElementById('filters').addEventListener('click',e=>{const b=e.target.closest('[data-filter]');if(!b)return;filter=b.dataset.filter;document.querySelectorAll('.filter').forEach(x=>x.classList.toggle('active',x===b));render();});
+document.getElementById('reloadBtn').addEventListener('click',()=>{if(current){play(current);}else{status.textContent='Сначала выбери канал.';}});
+document.getElementById('clearBtn').addEventListener('click',()=>{current=null;screen.innerHTML='<div class="screen-empty"><div class="tv-icon">▶</div><h2>Твой телевизор уже здесь</h2><p>Нажми на канал справа. Если вещатель запрещает встраивание, открой его сайт отдельной вкладкой.</p></div>';document.getElementById('nowTitle').textContent='Выбери телеканал';document.getElementById('nowSub').textContent='Официальная трансляция';openSource.href='https://az.mir24.tv/live';status.textContent='Плеер сброшен.';render();});
+// Restore last selected channel but don't auto-play audio on page load.
+try { const last=localStorage.getItem('efirBakuLast'); if(last && channels.some(c=>c.id===last)){ const c=channels.find(c=>c.id===last); document.getElementById('nowTitle').textContent=c.name;document.getElementById('nowSub').textContent='Последний выбранный канал · нажми в каталоге, чтобы запустить';openSource.href=c.url; } } catch {}
+render();
 </script>
 </body>
 </html>
