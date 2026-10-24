@@ -221,6 +221,43 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
   .player-control { min-height: 46px !important; font-size: 13px !important; }
 }
 
+
+/* Inline video on legacy TV WebViews: use regular flex layout instead of an absolutely-positioned video plane. */
+.video-wrap { display:flex !important; align-items:stretch !important; justify-content:stretch !important; position:relative !important; min-width:0 !important; min-height:0 !important; }
+.video-wrap video { position:relative !important; left:auto !important; top:auto !important; display:block !important; flex:1 1 auto !important; align-self:stretch !important; width:100% !important; height:100% !important; min-width:0 !important; min-height:0 !important; object-fit:contain !important; background:#000 !important; }
+
+@media (max-width:1100px) {
+  .controls { display:flex !important; flex-wrap:wrap !important; gap:6px !important; }
+  .player-control { flex:1 1 28% !important; min-width:100px !important; }
+}
+@media (max-width:760px) {
+  .controls { flex-wrap:wrap !important; }
+  .player-control { flex:1 1 28% !important; min-width:70px !important; font-size:12px !important; }
+}
+
+
+/* V6: TV-like aspect modes and an in-player control strip that remains available in fullscreen. */
+.toolbar > .search-box { margin: 0 0 10px 0 !important; }
+.toolbar > .seg-row { margin: 0 0 8px 0 !important; }
+.toolbar > .seg-row:last-child { margin-bottom: 0 !important; }
+.video-wrap { position:relative !important; overflow:hidden !important; }
+.video-wrap.mode-auto video { object-fit:contain !important; transform:none !important; width:100% !important; height:100% !important; flex:1 1 auto !important; }
+.video-wrap.mode-fit video { object-fit:contain !important; transform:none !important; width:100% !important; height:100% !important; flex:1 1 auto !important; }
+.video-wrap.mode-stretch video { object-fit:fill !important; transform:none !important; width:100% !important; height:100% !important; flex:1 1 auto !important; }
+.video-wrap.mode-zoom video { object-fit:cover !important; transform:scale(1.12) !important; width:100% !important; height:100% !important; flex:1 1 auto !important; }
+.video-wrap.mode-4-3 video { object-fit:fill !important; transform:none !important; width:75% !important; height:100% !important; flex:0 0 75% !important; align-self:center !important; }
+.tv-overlay-controls { position:absolute !important; z-index:30 !important; right:14px !important; bottom:14px !important; display:flex !important; flex-direction:row !important; align-items:center !important; gap:8px !important; padding:8px !important; background:rgba(5,10,16,.88) !important; border:1px solid rgba(255,255,255,.22) !important; border-radius:12px !important; box-shadow:0 4px 22px rgba(0,0,0,.55) !important; }
+.tv-video-action { min-width:120px !important; height:46px !important; padding:0 14px !important; border:1px solid #53657a !important; border-radius:9px !important; background:#182635 !important; color:#f6fbff !important; font-family:Arial,Helvetica,sans-serif !important; font-weight:bold !important; font-size:15px !important; white-space:nowrap !important; }
+.tv-video-action:focus, .tv-video-action.remote-focused { outline:4px solid #55edbc !important; outline-offset:2px !important; background:#18473d !important; color:#fff !important; }
+.player-control#videoModeBtn { min-width:160px !important; }
+.video-wrap:fullscreen, .video-wrap:-webkit-full-screen { width:100vw !important; height:100vh !important; max-width:100vw !important; max-height:100vh !important; border:0 !important; border-radius:0 !important; background:#000 !important; }
+.video-wrap:fullscreen video, .video-wrap:-webkit-full-screen video { width:100% !important; height:100% !important; }
+@media (max-width:1100px) {
+  .tv-overlay-controls { right:8px !important; bottom:8px !important; gap:5px !important; padding:5px !important; }
+  .tv-video-action { min-width:100px !important; height:42px !important; font-size:13px !important; padding:0 9px !important; }
+  .player-control#videoModeBtn { min-width:130px !important; }
+}
+
 </style>
 </head>
 <body>
@@ -232,13 +269,13 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
   <aside class="library" aria-label="Список телеканалов">
     <div class="library-head"><div><div class="section-title">ТЕЛЕКАНАЛЫ</div><div class="section-sub" id="listState">Встроенные плейлисты</div></div><div class="library-count"><span id="channelCount">0</span> КАНАЛОВ</div></div>
     <div class="toolbar">
+      <div class="search-box" id="searchBox"><span class="search-icon">⌕</span><input id="searchInput" class="search" type="search" placeholder="Поиск телеканала…" autocomplete="off" spellcheck="false" aria-label="Поиск телеканала"></div>
       <div class="seg-row" id="sourceTabs" aria-label="Каталог">
         <button class="seg active" data-source="all" type="button">Все</button><button class="seg" data-source="kino" type="button">KINO+</button><button class="seg" data-source="vpn" type="button">VPN</button>
       </div>
       <div class="seg-row" id="filterTabs" aria-label="Фильтр каналов">
-        <button class="seg active" data-filter="all" type="button">Все</button><button class="seg" data-filter="favorites" type="button">♥ Избранное <span id="favCount"></span></button><button class="seg" data-filter="hidden" type="button">× Удалённые</button>
+        <button class="seg" data-filter="all" type="button">Все</button><button class="seg active" data-filter="favorites" type="button">♥ Избранное <span id="favCount"></span></button><button class="seg" data-filter="hidden" type="button">× Удалённые</button>
       </div>
-      <div class="search-box"><span class="search-icon">⌕</span><input id="searchInput" class="search" type="search" placeholder="Поиск телеканала…" autocomplete="off" spellcheck="false" aria-label="Поиск телеканала"></div>
     </div>
     <div class="channel-list" id="channelList" role="listbox" aria-label="Каналы"><div class="empty"><div class="empty-symbol">📺</div><strong>Подготавливаю каталог…</strong><span>Каналы встроены в приложение.</span></div></div>
   </aside>
@@ -248,9 +285,9 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     <div class="player-status" id="playbackStatus" role="status" aria-live="polite">Каталог загружен. Ожидаю выбор канала.</div>
     <div class="warning" id="playerWarning"></div>
     <div class="controls" id="playerControls">
-      <button class="player-control primary" id="playPauseBtn" type="button">▶ Пуск / пауза</button><button class="player-control" id="muteBtn" type="button">🔊 Звук</button><button class="player-control" id="fullscreenBtn" type="button">⛶ На весь экран</button><button class="player-control" id="openStreamBtn" type="button">↻ Повторить запуск</button>
+      <button class="player-control" id="channelPrevBtn" type="button">CH− Назад</button><button class="player-control" id="channelNextBtn" type="button">CH+ Далее</button><button class="player-control primary" id="playPauseBtn" type="button">▶ Пуск / пауза</button><button class="player-control" id="videoModeBtn" type="button">▣ Режим: Авто</button><button class="player-control" id="fullscreenBtn" type="button">⛶ На весь экран</button><button class="player-control" id="openStreamBtn" type="button">↻ Повторить запуск</button>
     </div>
-    <div class="keyhelp"><span><b>↑ / ↓</b> Каналы</span><span><b>OK / Enter</b> Смотреть</span><span><b>← / →</b> Действия</span><span><b>CH+ / CH−</b> Следующий канал</span></div>
+    <div class="keyhelp"><span><b>↑ / ↓</b> Каналы</span><span><b>OK / Enter</b> Смотреть / пауза</span><span><b>← / →</b> Действия</span><span><b>CH+ / CH−</b> Следующий канал</span><span><b>Режим</b> Формат экрана</span></div>
   </main>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -263,15 +300,18 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
   var catalogNode = $('embeddedCatalog');
   var BUILTIN = {};
   var state = {
-    channels: [], filtered: [], selected: null, filter: 'all', sourceKey: 'all',
+    channels: [], filtered: [], selected: null, filter: 'favorites', sourceKey: 'all',
     favorites: [], hidden: [], rendered: 0, pageSize: 90, navIndex: 0,
-    navRole: 'main', focusArea: 'channels', avplayActive: false,
-    playbackTimer: null, toastTimer: null, playAttempt: 0
+    navRole: 'main', focusArea: 'channels', avplayActive: false, httpsRetryChannel: null, videoMode: 'auto', overlayIndex: 0,
+    playbackTimer: null, toastTimer: null, playAttempt: 0, previousSelected: null, lastChannelSwitch: 0
   };
 
   var STORAGE_FAVS = 'efir_iptv_favs_v2';
   var STORAGE_HIDDEN = 'efir_iptv_hidden_v1';
   var STORAGE_SOURCE = 'efir_iptv_source_v1';
+  var STORAGE_VIDEO_MODE = 'efir_iptv_video_mode_v1';
+  var VIDEO_MODES = ['auto', 'fit', 'stretch', '4:3'];
+  var VIDEO_MODE_LABELS = { 'auto':'Авто', 'fit':'Вписать', 'stretch':'Растянуть', '4:3':'4:3', 'zoom':'Увеличить' };
 
   function getStore(key, fallback) {
     try {
@@ -307,7 +347,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
   }
   function trim(value) { return String(value === null || value === undefined ? '' : value).replace(/^\s+|\s+$/g, ''); }
   function lower(value) { return trim(value).toLowerCase(); }
-  function channelKey(channel) { return JSON.stringify([channel.url || '', channel.name || '']); }
+  function channelKey(channel) { return JSON.stringify([channel.originalUrl || channel.url || '', channel.name || '']); }
   function contains(arr, value) { return arr.indexOf(value) !== -1; }
   function storeArray(key, arr, errorMessage) {
     if (!setStore(key, JSON.stringify(arr)) && errorMessage) toast(errorMessage);
@@ -351,16 +391,20 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     var map = {
       13:'Enter', 23:'Enter', 29443:'Enter', 37:'ArrowLeft', 38:'ArrowUp', 39:'ArrowRight', 40:'ArrowDown',
       8:'Backspace', 27:'Escape', 46:'Delete', 33:'PageUp', 34:'PageDown', 427:'ChannelUp', 428:'ChannelDown',
-      10009:'BrowserBack', 461:'BrowserBack', 415:'MediaPlay', 19:'Pause', 179:'MediaPlayPause',
-      10252:'MediaPlayPause', 403:'Red', 404:'Green', 405:'Yellow', 406:'Blue'
+      10190:'PreviousChannel', 415:'MediaPlay', 19:'Pause', 179:'MediaPlayPause', 10252:'MediaPlayPause',
+      403:'Red', 404:'Green', 405:'Yellow', 406:'Blue', 10009:'BrowserBack', 461:'BrowserBack'
     };
+    if (!key || key === 'Unidentified' || key === 'Dead') key = map[code] || '';
     if (key === 'Left') key = 'ArrowLeft';
     if (key === 'Right') key = 'ArrowRight';
     if (key === 'Up') key = 'ArrowUp';
     if (key === 'Down') key = 'ArrowDown';
     if (key === 'OK' || key === 'Select' || key === 'NumpadEnter') key = 'Enter';
-    if (key === 'Back' || key === 'Return') key = 'BrowserBack';
-    if (!key || key === 'Unidentified' || key === 'Dead') key = map[code] || '';
+    if (key === 'Back' || key === 'Return' || key === 'XF86Back') key = 'BrowserBack';
+    // Samsung maps CH- / CH+ to F11/F12 on keyboard-like remotes in some environments.
+    if (key === 'F12' || key === 'XF86RaiseChannel' || key === 'Channel+' || key === 'ChannelUp' || code === 123) key = 'ChannelUp';
+    if (key === 'F11' || key === 'XF86LowerChannel' || key === 'Channel-' || key === 'ChannelDown' || code === 122) key = 'ChannelDown';
+    if (key === 'XF86PreviousChannel' || key === 'LastChannel' || key === 'PreviousChannel') key = 'PreviousChannel';
     if (key === 'BrowserBack' && code === 27) key = 'Escape';
     return key;
   }
@@ -485,7 +529,10 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       extra = state.filter === 'hidden' ? 'Убери канал кнопкой ×, чтобы он появился здесь.' : state.filter === 'favorites' ? 'Нажми ♡ на канале, чтобы сохранить его здесь.' : 'Попробуй другой поиск или каталог.';
       list.innerHTML = '<div class="empty"><div class="empty-symbol">📺</div><strong>' + esc(message) + '</strong><span>' + esc(extra) + '</span></div>';
       updateStats(); updateTabs();
-      if (shouldFocus) safeFocus($('searchInput'));
+      if (shouldFocus) {
+        if (state.filter === 'favorites' || state.filter === 'hidden') focusButton($('filterTabs').querySelector('[data-filter="' + state.filter + '"]'), 'filter');
+        else safeFocus($('searchInput'));
+      }
       return;
     }
     renderMore();
@@ -538,6 +585,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
   }
   function clearVideo() {
     if (state.playbackTimer) { window.clearTimeout(state.playbackTimer); state.playbackTimer = null; }
+    removeHttpsRetryButton();
     stopAvPlay();
     var wrap = $('videoWrap'), old = wrap ? wrap.getElementsByTagName('video') : [];
     if (old && old.length) {
@@ -566,7 +614,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       showCatalogError('Во встроенном каталоге не найдены списки каналов.'); return;
     }
     state.playAttempt++;
-    state.sourceKey = key; state.channels = BUILTIN[key]; state.filter = 'all'; state.selected = null; state.navIndex = 0; state.navRole = 'main'; state.focusArea = 'channels';
+    state.sourceKey = key; state.channels = BUILTIN[key]; state.selected = null; state.navIndex = 0; state.navRole = 'main'; state.focusArea = 'channels';
     setStore(STORAGE_SOURCE, key);
     if ($('searchInput')) $('searchInput').value = '';
     clearVideo();
@@ -592,16 +640,134 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     try { av.close(); } catch (err2) { }
     state.avplayActive = false;
   }
-  function showWarning(message) {
+  function videoModeLabel(mode) { return VIDEO_MODE_LABELS[mode] || VIDEO_MODE_LABELS.auto; }
+  function updateVideoModeLabels() {
+    var label = videoModeLabel(state.videoMode);
+    var main = $('videoModeBtn'), overlay = $('fullscreenScaleBtn');
+    if (main) main.innerHTML = '▣ Режим: ' + esc(label);
+    if (overlay) overlay.innerHTML = '▣ ' + esc(label);
+  }
+  function applyVideoMode(video) {
+    var wrap = $('videoWrap'), i, cls;
+    if (!wrap) return;
+    var classes = ['mode-auto','mode-fit','mode-stretch','mode-4-3','mode-zoom'];
+    for (i = 0; i < classes.length; i++) removeClass(wrap, classes[i]);
+    cls = state.videoMode === '4:3' ? 'mode-4-3' : 'mode-' + state.videoMode;
+    addClass(wrap, cls);
+    if (video) {
+      video.style.position = 'relative'; video.style.left = 'auto'; video.style.top = 'auto';
+      video.style.height = '100%'; video.style.background = '#000'; video.style.display = 'block';
+      video.style.objectFit = state.videoMode === 'stretch' || state.videoMode === '4:3' ? 'fill' : state.videoMode === 'zoom' ? 'cover' : 'contain';
+      video.style.transform = state.videoMode === 'zoom' ? 'scale(1.12)' : 'none';
+      video.style.width = state.videoMode === '4:3' ? '75%' : '100%';
+      video.style.flex = state.videoMode === '4:3' ? '0 0 75%' : '1 1 auto';
+    }
+    updateVideoModeLabels();
+  }
+  function cycleVideoMode() {
+    var i = VIDEO_MODES.indexOf(state.videoMode);
+    state.videoMode = VIDEO_MODES[(i + 1 + VIDEO_MODES.length) % VIDEO_MODES.length];
+    setStore(STORAGE_VIDEO_MODE, state.videoMode);
+    var video = $('videoWrap').getElementsByTagName('video')[0];
+    applyVideoMode(video || null);
+    if (state.avplayActive) syncAvPlayDisplayRect();
+    updateVideoModeLabels();
+    toast('Режим изображения: ' + videoModeLabel(state.videoMode));
+  }
+  function updatePauseLabels() {
+    var paused = false, av, video;
+    if (state.avplayActive) {
+      av = getSamsungAvPlay();
+      try { paused = !!(av && av.getState && av.getState() === 'PAUSED'); } catch (ignore) { paused = false; }
+    } else {
+      video = $('videoWrap').getElementsByTagName('video')[0];
+      paused = !!(video && video.paused);
+    }
+    var label = paused ? '▶ Продолжить' : 'Ⅱ Пауза';
+    var main = $('playPauseBtn'), overlay = $('fullscreenPauseBtn');
+    if (main) main.innerHTML = label;
+    if (overlay) overlay.innerHTML = label;
+  }
+  function ensureVideoOverlay() {
+    var wrap = $('videoWrap');
+    if (!wrap) return;
+    var existing = $('fullscreenOverlay');
+    if (existing && existing.parentNode === wrap) { updatePauseLabels(); updateVideoModeLabels(); return; }
+    var bar = document.createElement('div'); bar.id = 'fullscreenOverlay'; bar.className = 'tv-overlay-controls';
+    var pause = document.createElement('button'); pause.id = 'fullscreenPauseBtn'; pause.type = 'button'; pause.className = 'tv-video-action'; pause.setAttribute('tabindex','-1'); pause.setAttribute('aria-label','Пауза или продолжить');
+    pause.onclick = function () { togglePlayback(); };
+    var scale = document.createElement('button'); scale.id = 'fullscreenScaleBtn'; scale.type = 'button'; scale.className = 'tv-video-action'; scale.setAttribute('tabindex','-1'); scale.setAttribute('aria-label','Изменить формат изображения');
+    scale.onclick = function () { cycleVideoMode(); };
+    bar.appendChild(pause); bar.appendChild(scale); wrap.appendChild(bar);
+    updatePauseLabels(); updateVideoModeLabels();
+  }
+
+  // Samsung AVPlay video is drawn on a separate video plane; use its documented display modes.
+  // AVPlay setDisplayRect uses a 1920x1080 coordinate space regardless of CSS pixel dimensions.
+  function syncAvPlayDisplayRect() {
+    var av = getSamsungAvPlay(), wrap = $('videoWrap'), rect, viewportWidth, scale, x, y, w, h, method;
+    if (!av || !state.avplayActive || !wrap || typeof av.setDisplayRect !== 'function') return false;
+    try {
+      rect = wrap.getBoundingClientRect();
+      viewportWidth = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 1920;
+      scale = 1920 / viewportWidth;
+      x = Math.max(0, Math.round(rect.left * scale));
+      y = Math.max(0, Math.round(rect.top * scale));
+      w = Math.max(1, Math.min(1920 - x, Math.round(rect.width * scale)));
+      h = Math.max(1, Math.min(1080 - y, Math.round(rect.height * scale)));
+      method = state.videoMode === 'fit' ? 'PLAYER_DISPLAY_MODE_LETTER_BOX' :
+        state.videoMode === 'stretch' ? 'PLAYER_DISPLAY_MODE_FULL_SCREEN' : 'PLAYER_DISPLAY_MODE_AUTO_ASPECT_RATIO';
+      if (state.videoMode === '4:3') {
+        w = Math.max(1, Math.min(w, Math.round(h * 4 / 3)));
+        x = Math.max(0, Math.round(rect.left * scale + (rect.width * scale - w) / 2));
+        method = 'PLAYER_DISPLAY_MODE_FULL_SCREEN';
+      }
+      try { if (typeof av.setDisplayMethod === 'function') av.setDisplayMethod(method); } catch (ignore) { }
+      av.setDisplayRect(x, y, w, h);
+      return true;
+    } catch (err) { return false; }
+  }
+  function removeHttpsRetryButton() {
+    var button = $('tryHttpsBtn');
+    if (button && button.parentNode) button.parentNode.removeChild(button);
+    state.httpsRetryChannel = null;
+  }
+  function retryHttpsVariant(channel) {
+    if (!channel || !/^http:\/\//i.test(channel.url || '')) return;
+    var copy = {}, key;
+    for (key in channel) if (Object.prototype.hasOwnProperty.call(channel, key)) copy[key] = channel[key];
+    copy.originalUrl = channel.originalUrl || channel.url;
+    copy.url = channel.url.replace(/^http:/i, 'https:');
+    copy.httpsRetryAttempt = true;
+    playChannel(copy);
+  }
+  function showWarning(message, channel) {
     var warning = $('playerWarning');
     if (!warning) return;
     warning.innerHTML = esc(message);
     addClass(warning, 'show');
+    // Offer a real HTTPS URL retry only after an HTTP stream has failed.
+    if (channel && /^http:\/\//i.test(channel.url || '') && !channel.httpsRetryAttempt) {
+      removeHttpsRetryButton();
+      state.httpsRetryChannel = channel;
+      var button = document.createElement('button');
+      button.id = 'tryHttpsBtn';
+      button.type = 'button';
+      button.className = 'player-control';
+      button.innerHTML = '🔒 Проверить HTTPS';
+      button.setAttribute('aria-label', 'Проверить HTTPS-версию этого потока');
+      button.onclick = function () { retryHttpsVariant(state.httpsRetryChannel); };
+      var controls = $('playerControls'), repeat = $('openStreamBtn');
+      if (controls) controls.insertBefore(button, repeat || null);
+    }
   }
-  function describeError(video, url, detail) {
+  function describeError(video, url, detail, channel) {
     var code = video && video.error ? video.error.code : 0;
+    if (channel && channel.httpsRetryAttempt) {
+      return 'HTTPS-вариант тоже не запустился. Возможно, сервер не поддерживает HTTPS, ссылка уже недействительна, требует авторизацию или использует неподдерживаемый формат. HTML не может сам превратить обычный HTTP-сервер в HTTPS.';
+    }
     if (location.protocol === 'https:' && /^http:\/\//i.test(url)) {
-      return 'Этот поток работает по HTTP, а сайт открыт через HTTPS на GitHub Pages. Телевизор может блокировать такой адрес. HTML не может превратить его в HTTPS: нужен HTTPS-поток или серверный HTTPS-релей. Если приложение не предоставляет Samsung AVPlay, этот канал здесь не запустится.';
+      return 'Адрес канала использует HTTP, а сайт открыт через HTTPS. Браузер мог автоматически попробовать HTTPS и получить отказ. Это лишь возможная причина, не точный диагноз: источник также может быть отключён, ссылка — устареть, либо формат — не поддерживаться. Нажми «Проверить HTTPS» среди кнопок плеера: это поможет только если сервер действительно поддерживает HTTPS.';
     }
     if (/cors|cross-origin|manifest|network|timeout|тайм-аут/i.test(String(detail || ''))) {
       return 'Не удалось получить поток. Сервер может запрещать доступ с GitHub Pages, не отдавать HLS-манифест/сегменты, требовать авторизацию или быть временно недоступным.';
@@ -619,9 +785,17 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
   function htmlPlayback(channel, attempt, avError) {
     if (attempt !== state.playAttempt) return;
     var wrap = $('videoWrap'), video = document.createElement('video'), url = channel.url;
-    video.setAttribute('controls', 'controls'); video.setAttribute('autoplay', 'autoplay'); video.setAttribute('playsinline', 'playsinline');
-    video.preload = 'auto'; video.style.width = '100%'; video.style.height = '100%'; video.style.background = '#000'; video.style.display = 'block';
+    video.setAttribute('controls', 'controls'); video.setAttribute('autoplay', 'autoplay');
+    video.setAttribute('playsinline', 'playsinline'); video.setAttribute('webkit-playsinline', 'true');
+    video.playsInline = true; video.preload = 'auto';
+    // Avoid absolute-positioned hardware video planes on older embedded TV WebViews.
+    video.style.position = 'relative'; video.style.left = 'auto'; video.style.top = 'auto';
+    video.style.flex = '1 1 auto'; video.style.minWidth = '0'; video.style.minHeight = '0';
+    video.style.width = '100%'; video.style.height = '100%'; video.style.objectFit = 'contain';
+    video.style.background = '#000'; video.style.display = 'block';
     wrap.innerHTML = ''; wrap.appendChild(video);
+    applyVideoMode(video); ensureVideoOverlay();
+    video.addEventListener('play', updatePauseLabels); video.addEventListener('pause', updatePauseLabels); video.addEventListener('playing', updatePauseLabels);
     $('liveText').innerHTML = 'ПОДКЛЮЧЕНИЕ';
     if (location.protocol === 'https:' && /^http:\/\//i.test(url)) {
       setStatus(avError ? 'Нативный плеер недоступен/не запустил канал. Пробую браузер…' : 'Источник HTTP: пробую воспроизведение.');
@@ -633,7 +807,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     video.addEventListener('error', function () {
       if (attempt !== state.playAttempt || finished || playing) return;
       finished = true;
-      $('liveText').innerHTML = 'НЕТ СИГНАЛА'; setStatus('Поток не запустился.'); showWarning(describeError(video, url, avError || 'media error'));
+      $('liveText').innerHTML = 'НЕТ СИГНАЛА'; setStatus('Поток не запустился.'); showWarning(describeError(video, url, avError || 'media error', channel), channel);
     });
     try {
       video.src = url; video.load();
@@ -643,12 +817,12 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
         setStatus('Автозапуск не разрешён. Нажми OK на плеере.');
       });
     } catch (err) {
-      finished = true; $('liveText').innerHTML = 'НЕТ СИГНАЛА'; setStatus('Поток не запустился.'); showWarning(describeError(video, url, err.message || err));
+      finished = true; $('liveText').innerHTML = 'НЕТ СИГНАЛА'; setStatus('Поток не запустился.'); showWarning(describeError(video, url, err.message || err, channel), channel);
     }
     state.playbackTimer = window.setTimeout(function () {
       if (attempt !== state.playAttempt || playing || finished) return;
       finished = true; $('liveText').innerHTML = 'НЕТ СИГНАЛА'; setStatus('Время ожидания истекло.');
-      showWarning(describeError(video, url, avError || 'тайм-аут'));
+      showWarning(describeError(video, url, avError || 'тайм-аут', channel), channel);
     }, 12000);
   }
   function tryAvPlay(channel, attempt) {
@@ -657,10 +831,8 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     try {
       stopAvPlay();
       av.open(url); state.avplayActive = true;
-      var wrap = $('videoWrap'), rect = wrap.getBoundingClientRect();
-      var sx = 1920 / (window.innerWidth || 1920), sy = 1080 / (window.innerHeight || 1080);
-      if (typeof av.setDisplayRect === 'function') av.setDisplayRect(Math.max(0, Math.round(rect.left * sx)), Math.max(0, Math.round(rect.top * sy)), Math.max(1, Math.round(rect.width * sx)), Math.max(1, Math.round(rect.height * sy)));
-      try { if (typeof av.setDisplayMethod === 'function') av.setDisplayMethod('PLAYER_DISPLAY_MODE_LETTER_BOX'); } catch (ignore) { }
+      // Give the layout one frame so getBoundingClientRect reflects the real TV viewport.
+      syncAvPlayDisplayRect();
       try {
         if (typeof av.setListener === 'function') av.setListener({
           onbufferingstart: function () { if (attempt === state.playAttempt) setStatus('Буферизация через Samsung AVPlay…'); },
@@ -670,10 +842,11 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
         });
       } catch (ignore2) { }
       $('videoWrap').innerHTML = '';
+      applyVideoMode(null); ensureVideoOverlay();
       setStatus('Запускаю аппаратный плеер Samsung…');
       av.prepareAsync(function () {
         if (attempt !== state.playAttempt) { stopAvPlay(); return; }
-        try { av.play(); avSucceeded = true; if (state.playbackTimer) { window.clearTimeout(state.playbackTimer); state.playbackTimer = null; } $('liveText').innerHTML = 'В ПРЯМОМ ЭФИРЕ'; setStatus('Воспроизведение через Samsung AVPlay.'); if ($('playerWarning')) removeClass($('playerWarning'), 'show'); }
+        try { syncAvPlayDisplayRect(); av.play(); avSucceeded = true; window.setTimeout(syncAvPlayDisplayRect, 80); if (state.playbackTimer) { window.clearTimeout(state.playbackTimer); state.playbackTimer = null; } $('liveText').innerHTML = 'В ПРЯМОМ ЭФИРЕ'; setStatus('Воспроизведение через Samsung AVPlay.'); if ($('playerWarning')) removeClass($('playerWarning'), 'show'); updatePauseLabels(); }
         catch (err) { stopAvPlay(); htmlPlayback(channel, attempt, err.message || err); }
       }, function (err) {
         if (attempt !== state.playAttempt) return;
@@ -706,6 +879,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     if (!channel.url) { toast('У этого канала нет ссылки на эфир.'); return; }
     state.playAttempt++;
     var attempt = state.playAttempt;
+    if (state.selected && channelKey(state.selected) !== channelKey(channel)) state.previousSelected = state.selected;
     state.selected = channel;
     clearVideo();
     $('nowName').innerHTML = esc(channel.name || 'Телеканал'); $('nowGroup').innerHTML = esc((channel.group || 'Без группы') + (channel.source ? ' · ' + channel.source : ''));
@@ -715,6 +889,33 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     updatePlayingRows();
     if (tryAvPlay(channel, attempt)) return;
     htmlPlayback(channel, attempt, '');
+  }
+  function switchChannel(direction) {
+    var now = new Date().getTime(), idx = -1, i, next, key;
+    // Ignore duplicated keydown events from nested WebViews/browsers.
+    if (now - state.lastChannelSwitch < 180) return;
+    state.lastChannelSwitch = now;
+    if (!state.filtered || !state.filtered.length) { toast('Каталог каналов пуст.'); return; }
+    if (state.filter === 'hidden') { setFilter('all'); }
+    if (direction === 'previous') {
+      if (state.previousSelected && !isHidden(state.previousSelected)) {
+        key = channelKey(state.previousSelected);
+        for (i = 0; i < state.filtered.length; i++) if (channelKey(state.filtered[i]) === key) { idx = i; break; }
+        if (idx >= 0) { next = state.filtered[idx]; focusRow(idx, 'main'); playChannel(next); return; }
+      }
+      direction = -1;
+    }
+    if (state.selected) {
+      key = channelKey(state.selected);
+      for (i = 0; i < state.filtered.length; i++) if (channelKey(state.filtered[i]) === key) { idx = i; break; }
+    }
+    if (idx < 0) idx = Math.max(0, Math.min(state.filtered.length - 1, state.navIndex || 0));
+    // ChannelUp moves forward to the next entry; ChannelDown moves back. Wrap at list ends.
+    idx = (idx + (direction > 0 ? 1 : -1) + state.filtered.length) % state.filtered.length;
+    next = state.filtered[idx];
+    if (!next || isHidden(next)) return;
+    focusRow(idx, 'main');
+    playChannel(next);
   }
   function setFilter(filter) {
     state.filter = filter; state.navIndex = 0; updateTabs(); renderChannels(true, null, 'main'); updateStats();
@@ -761,20 +962,36 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     }
 
     if (tag === 'input') {
-      if (key === 'ArrowDown') { if (e.preventDefault) e.preventDefault(); focusRow(0, 'main'); return; }
-      if (key === 'ArrowUp') { if (e.preventDefault) e.preventDefault(); focusButton($('filterTabs').querySelector('[data-filter="' + state.filter + '"]'), 'filter'); return; }
-      if (key === 'Enter') { if (e.preventDefault) e.preventDefault(); focusRow(0, 'main'); return; }
+      if (key === 'ArrowDown') { if (e.preventDefault) e.preventDefault(); focusButton(listButtons('[data-source]').filter(function (el) { return el.getAttribute('data-source') === state.sourceKey; })[0] || listButtons('[data-source]')[0], 'source'); return; }
+      if (key === 'ArrowUp') { if (e.preventDefault) e.preventDefault(); return; }
+      if (key === 'Enter') { if (e.preventDefault) e.preventDefault(); focusButton(listButtons('[data-source]').filter(function (el) { return el.getAttribute('data-source') === state.sourceKey; })[0] || listButtons('[data-source]')[0], 'source'); return; }
       if (key === 'Escape') { if (e.preventDefault) e.preventDefault(); $('searchInput').value = ''; renderChannels(false); focusRow(0, 'main'); return; }
       return;
     }
 
-    if (key === 'ChannelDown' || key === 'PageDown') { if (e.preventDefault) e.preventDefault(); focusRow(Math.min(state.filtered.length - 1, state.navIndex + 1), 'main'); if (state.filtered.length) playChannel(state.filtered[state.navIndex]); return; }
-    if (key === 'ChannelUp' || key === 'PageUp') { if (e.preventDefault) e.preventDefault(); focusRow(Math.max(0, state.navIndex - 1), 'main'); if (state.filtered.length) playChannel(state.filtered[state.navIndex]); return; }
+    if (target.id === 'fullscreenPauseBtn' || target.id === 'fullscreenScaleBtn') {
+      state.focusArea = 'overlay'; state.overlayIndex = target.id === 'fullscreenPauseBtn' ? 0 : 1;
+      if (key === 'ArrowLeft' || key === 'ArrowRight') {
+        if (e.preventDefault) e.preventDefault();
+        state.overlayIndex = state.overlayIndex === 0 ? 1 : 0;
+        focusButton($(state.overlayIndex === 0 ? 'fullscreenPauseBtn' : 'fullscreenScaleBtn'), 'overlay'); return;
+      }
+      if (key === 'ArrowUp' || key === 'ArrowDown') { if (e.preventDefault) e.preventDefault(); focusSelected(); return; }
+      if (key === 'Enter') { if (e.preventDefault) e.preventDefault(); if (target.click) target.click(); return; }
+    }
+
+    if (key === 'ChannelDown' || key === 'PageDown') { if (e.preventDefault) e.preventDefault(); switchChannel(-1); return; }
+    if (key === 'ChannelUp' || key === 'PageUp') { if (e.preventDefault) e.preventDefault(); switchChannel(1); return; }
+    if (key === 'PreviousChannel') { if (e.preventDefault) e.preventDefault(); switchChannel('previous'); return; }
     if (key === 'MediaPlayPause' || key === 'MediaPlay' || key === 'Pause' || key === ' ') {
       if (e.preventDefault) e.preventDefault(); togglePlayback(); return;
     }
     if (key === 'BrowserBack' || key === 'Escape') {
       if (e.preventDefault) e.preventDefault();
+      try {
+        if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
+        else if (document.webkitFullscreenElement && document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+      } catch (ignoreExit) { }
       if (state.selected) focusSelected(); else focusRow(0, 'main'); return;
     }
 
@@ -819,9 +1036,16 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       }
       if (key === 'ArrowDown') {
         if (e.preventDefault) e.preventDefault();
-        if (state.focusArea === 'source') focusButton(listButtons('[data-filter]')[0], 'filter'); else focusButton($('searchInput'), 'search'); return;
+        if (state.focusArea === 'source') focusButton(listButtons('[data-filter]').filter(function (el) { return el.getAttribute('data-filter') === state.filter; })[0] || listButtons('[data-filter]')[0], 'filter');
+        else focusRow(0, 'main');
+        return;
       }
-      if (key === 'ArrowUp' && state.focusArea === 'filter') { if (e.preventDefault) e.preventDefault(); focusButton(listButtons('[data-source]').filter ? listButtons('[data-source]').filter(function (el) { return el.getAttribute('data-source') === state.sourceKey; })[0] : listButtons('[data-source]')[0], 'source'); return; }
+      if (key === 'ArrowUp') {
+        if (e.preventDefault) e.preventDefault();
+        if (state.focusArea === 'filter') focusButton(listButtons('[data-source]').filter(function (el) { return el.getAttribute('data-source') === state.sourceKey; })[0] || listButtons('[data-source]')[0], 'source');
+        else focusButton($('searchInput'), 'search');
+        return;
+      }
       if (key === 'Enter') { if (e.preventDefault) e.preventDefault(); if (target.click) target.click(); return; }
     }
 
@@ -841,12 +1065,16 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     var av, video;
     if (state.avplayActive) {
       av = getSamsungAvPlay();
-      try { if (av && av.getState && av.getState() === 'PLAYING') av.pause(); else if (av) av.play(); } catch (err) { }
+      try { if (av && av.getState && av.getState() === 'PLAYING') av.pause(); else if (av) av.play(); }
+      catch (err) { toast('Телевизор не разрешил паузу через AVPlay.'); }
+      window.setTimeout(updatePauseLabels, 120);
       return;
     }
     video = $('videoWrap').getElementsByTagName('video')[0];
     if (!video) { toast('Сначала выбери канал.'); return; }
-    try { if (video.paused) video.play(); else video.pause(); } catch (err2) { toast('Этот поток не поддерживает паузу в браузере ТВ.'); }
+    try { if (video.paused) { var result = video.play(); if (result && result.catch) result.catch(function () { toast('Не удалось продолжить поток.'); }); } else video.pause(); }
+    catch (err2) { toast('Этот поток не поддерживает паузу в браузере ТВ.'); }
+    window.setTimeout(updatePauseLabels, 120);
   }
 
   function init() {
@@ -857,8 +1085,10 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       if (!BUILTIN || !BUILTIN.all || !BUILTIN.all.length) throw new Error('Список «Все каналы» пуст.');
       try { state.favorites = JSON.parse(getStore(STORAGE_FAVS, '[]')) || []; } catch (err1) { state.favorites = []; }
       try { state.hidden = JSON.parse(getStore(STORAGE_HIDDEN, '[]')) || []; } catch (err2) { state.hidden = []; }
-      state.sourceKey = getStore(STORAGE_SOURCE, 'all');
-      if (!BUILTIN[state.sourceKey]) state.sourceKey = 'all';
+      state.sourceKey = 'all';
+      setStore(STORAGE_SOURCE, 'all');
+      state.videoMode = getStore(STORAGE_VIDEO_MODE, 'auto');
+      if (VIDEO_MODES.indexOf(state.videoMode) < 0) state.videoMode = 'auto';
 
       var sourceButtons = document.querySelectorAll('[data-source]'), filterButtons = document.querySelectorAll('[data-filter]'), i;
       for (i = 0; i < sourceButtons.length; i++) sourceButtons[i].onclick = handleSourceClick;
@@ -867,18 +1097,20 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       $('searchInput').onfocus = function () { state.focusArea = 'search'; };
       $('favBtn').onclick = function () { if (state.selected) toggleFavorite(state.selected); else toast('Сначала выбери канал.'); };
       $('playPauseBtn').onclick = togglePlayback;
-      $('muteBtn').onclick = function () {
-        var video = $('videoWrap').getElementsByTagName('video')[0];
-        if (state.avplayActive && window.webapis && window.webapis.avplay) { toast('Звук нативного плеера регулируется кнопкой Mute пульта.'); return; }
-        if (!video) { toast('Сначала выбери канал.'); return; }
-        video.muted = !video.muted; $('muteBtn').innerHTML = video.muted ? '🔇 Без звука' : '🔊 Звук';
-        toast(video.muted ? 'Звук выключен' : 'Звук включён');
-      };
+      $('videoModeBtn').onclick = cycleVideoMode;
+      updateVideoModeLabels();
+      $('channelPrevBtn').onclick = function () { switchChannel(-1); };
+      $('channelNextBtn').onclick = function () { switchChannel(1); };
       $('fullscreenBtn').onclick = function () {
-        var video = $('videoWrap').getElementsByTagName('video')[0];
-        if (video && typeof video.webkitEnterFullscreen === 'function') { try { video.webkitEnterFullscreen(); return; } catch (err) { } }
-        if ($('videoWrap').requestFullscreen) { try { $('videoWrap').requestFullscreen(); } catch (err2) { toast('Полный экран не поддерживается.'); } }
-        else toast('Полный экран зависит от приложения телевизора.');
+        var wrap = $('videoWrap'), video = wrap.getElementsByTagName('video')[0];
+        ensureVideoOverlay();
+        try {
+          if (wrap.requestFullscreen) { wrap.requestFullscreen(); return; }
+          if (wrap.webkitRequestFullscreen) { wrap.webkitRequestFullscreen(); return; }
+          if (wrap.webkitRequestFullScreen) { wrap.webkitRequestFullScreen(); return; }
+          if (video && typeof video.webkitEnterFullscreen === 'function') { video.webkitEnterFullscreen(); return; }
+        } catch (err) { }
+        toast('Полный экран зависит от возможностей приложения телевизора.');
       };
       $('openStreamBtn').onclick = function () { if (state.selected) playChannel(state.selected); else toast('Сначала выбери канал.'); };
       $('channelList').onscroll = function () {
@@ -893,15 +1125,29 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
           if (target.getAttribute('data-source') !== null) state.focusArea = 'source';
           else if (target.getAttribute('data-filter') !== null) state.focusArea = 'filter';
           else if (target.id === 'searchInput') state.focusArea = 'search';
+          else if (target.id === 'fullscreenPauseBtn' || target.id === 'fullscreenScaleBtn') { state.focusArea = 'overlay'; state.overlayIndex = target.id === 'fullscreenPauseBtn' ? 0 : 1; }
           else if (hasClass(target, 'player-control') || target.id === 'favBtn') state.focusArea = 'player';
         }
       }, true);
       try { window.addEventListener('keydown', handleKey, true); } catch (keyErr) { }
       try { document.addEventListener('keydown', handleKey, true); } catch (keyErr2) { document.onkeydown = handleKey; }
       if (window.tizen && window.tizen.tvinputdevice && typeof window.tizen.tvinputdevice.registerKey === 'function') {
-        var keys = ['MediaPlayPause', 'MediaPlay', 'ChannelUp', 'ChannelDown'];
+        var keys = ['MediaPlayPause', 'MediaPlay', 'ChannelUp', 'ChannelDown', 'PreviousChannel'];
         for (i = 0; i < keys.length; i++) { try { window.tizen.tvinputdevice.registerKey(keys[i]); } catch (regErr) { } }
       }
+      // AVPlay's video plane is independent from HTML layout; keep it aligned when the host TV WebView resizes.
+      window.addEventListener('resize', function () { window.setTimeout(syncAvPlayDisplayRect, 80); });
+      function onFullscreenChange() {
+        window.setTimeout(syncAvPlayDisplayRect, 80);
+        window.setTimeout(function () {
+          var wrap = $('videoWrap');
+          var active = !!(document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap || document.webkitIsFullScreen);
+          if (active && $('fullscreenPauseBtn')) focusButton($('fullscreenPauseBtn'), 'overlay');
+          else if (state.selected) focusSelected();
+        }, 140);
+      }
+      document.addEventListener('fullscreenchange', onFullscreenChange);
+      document.addEventListener('webkitfullscreenchange', onFullscreenChange);
       loadBuiltin(state.sourceKey, true, true);
       setStatus('Каталог готов: ' + state.channels.length + ' каналов. Выбери эфир.');
     } catch (err) {
