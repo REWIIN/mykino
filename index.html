@@ -1,127 +1,302 @@
 <!DOCTYPE html>
-<html lang="ru"><head>
+<html lang="ru">
+<head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=1920">
-<title>MyKino TV</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LUSTRA</title>
 <style>
-  :root{--bg:#0b0b10;--card:#1b1b25;--accent:#4da3ff}
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:#fff;font:32px/1.3 sans-serif;overflow:hidden}
-  header{padding:30px 60px;font-size:48px;font-weight:700}
-  #grid{display:flex;flex-wrap:wrap;padding:20px 40px}
-  .card{display:block;width:calc(25% - 40px);margin:20px;background:var(--card);border-radius:18px;padding:0;border:0;color:#fff;text-align:left;
-        font:inherit;overflow:hidden;transition:transform .15s}
-  .card .pic{height:200px;background:linear-gradient(135deg,#2b3a67,#1b1b25);display:flex;
-        align-items:center;justify-content:center;font-size:64px}
-  .card .t{padding:18px 22px}
-  .card:focus{outline:6px solid var(--accent);transform:scale(1.06)}
-  #player{position:fixed;top:0;left:0;right:0;bottom:0;background:#000;display:none}
-  #player video{width:100%;height:100%}
-  #hud{position:absolute;left:0;right:0;bottom:0;padding:30px 60px;background:linear-gradient(transparent,#000c);
-       font-size:30px;opacity:0;transition:opacity .3s}
-  #hud.show{opacity:1}
-  #bar{height:8px;background:#444;margin-top:12px;border-radius:4px}
-  #bar div{height:100%;width:0;background:var(--accent);border-radius:4px}
-</style></head>
+html,body{margin:0;padding:0;height:100%;background:#141414;color:#fff;font-family:Arial,Helvetica,sans-serif;overflow:hidden}
+#app{display:flex;flex-direction:column;height:100%}
+#top{height:80px;flex:none;display:flex;align-items:center;padding:0 60px}
+#logo{font-size:40px;font-weight:bold;color:#e50914;letter-spacing:4px}
+#info{height:200px;flex:none;padding:0 60px;overflow:hidden}
+#itTitle{font-size:44px;font-weight:bold;margin:0 0 8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#itYear{font-size:24px;color:#aaa;margin-bottom:10px;height:30px}
+#itDesc{font-size:24px;line-height:32px;color:#ddd;max-height:128px;overflow:hidden}
+#wrap{flex:1;position:relative;overflow:hidden;padding:0 46px}
+#cards{display:flex;flex-wrap:wrap;padding-top:24px;padding-bottom:240px}
+.card{width:200px;margin:0 14px 28px;flex:none;transition:transform .15s}
+.poster{width:200px;height:300px;box-sizing:border-box;border:4px solid transparent;background:#2a2a2a;overflow:hidden}
+.poster img{width:100%;height:100%;object-fit:cover;display:block}
+.ctitle{margin-top:10px;font-size:20px;color:#bbb;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.card.focus{transform:scale(1.08)}
+.card.focus .poster{border-color:#fff}
+.card.focus .ctitle{color:#fff}
+#msg{display:none;position:fixed;left:0;right:0;top:45%;text-align:center;font-size:36px;z-index:20;text-shadow:0 0 10px #000}
+#player{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:10}
+#player.on{display:block}
+#vid{width:100%;height:100%;background:#000;display:block}
+#ovl{position:absolute;left:0;right:0;bottom:0;padding:40px 60px;background:rgba(0,0,0,.75);opacity:0;transition:opacity .3s}
+#ovl.on{opacity:1}
+#pTitle{font-size:32px}
+#pBar{height:8px;background:#555;margin-top:16px}
+#pFill{height:8px;background:#e50914;width:0}
+#pTime{font-size:24px;color:#ccc;margin-top:10px}
+</style>
+</head>
 <body>
-<header>🎬 MyKino</header>
-<div id="grid"></div>
-
+<div id="app">
+  <div id="top"><div id="logo">LUSTRA</div></div>
+  <div id="info">
+    <div id="itTitle"></div>
+    <div id="itYear"></div>
+    <div id="itDesc"></div>
+  </div>
+  <div id="wrap"><div id="cards"></div></div>
+</div>
+<div id="msg"></div>
 <div id="player">
-  <video id="v" autoplay></video>
-  <div id="hud"><span id="ptitle"></span><div id="bar"><div id="prog"></div></div></div>
+  <video id="vid"></video>
+  <div id="ovl">
+    <div id="pTitle"></div>
+    <div id="pBar"><div id="pFill"></div></div>
+    <div id="pTime"></div>
+  </div>
 </div>
 
 <script>
-// ===== КАТАЛОГ: замените на данные с вашего сервера =====
-// Для реального сайта: fetch('/api/catalog.json').then(r=>r.json()).then(render)
-var CATALOG = [
-  {title:"Тест MP4 (Big Buck Bunny)", url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4"},
-  {title:"Тест MP4 (Sintel)",         url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/Sintel.mp4"},
-  {title:"Тест HLS (.m3u8)",          url:"https://test-streams.mux.dev/x36xhzz/x36xhzz.m3u8"},
-  {title:"Тест MP4 (Tears of Steel)", url:"https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/TearsOfSteel.mp4"}
-];
+var items = [];
+var cur = 0;
+var inPlayer = false;
+var ovlTimer = null;
 
-var KEY = {LEFT:37,UP:38,RIGHT:39,DOWN:40,ENTER:13,BACK:10009,
-           PLAY:415,PAUSE:19,STOP:413,FF:417,RW:412,PLAYPAUSE:10252};
+var elCards = document.getElementById('cards');
+var elWrap = document.getElementById('wrap');
+var elMsg = document.getElementById('msg');
+var vid = document.getElementById('vid');
+var elPlayer = document.getElementById('player');
+var elOvl = document.getElementById('ovl');
 
-// Регистрируем медиа-кнопки, если доступен Tizen API
-try{ ["MediaPlay","MediaPause","MediaStop","MediaPlayPause","MediaFastForward","MediaRewind"]
-      .forEach(function(k){ tizen.tvinputdevice.registerKey(k); }); }catch(e){}
+function showMsg(t) {
+  if (t) { elMsg.textContent = t; elMsg.style.display = 'block'; }
+  else { elMsg.style.display = 'none'; }
+}
 
-var grid = document.getElementById("grid"), player = document.getElementById("player"),
-    v = document.getElementById("v"), hud = document.getElementById("hud"),
-    prog = document.getElementById("prog"), lastCard = null, hudTimer;
+function getJSON(url, cb) {
+  var x = new XMLHttpRequest();
+  x.open('GET', url, true);
+  x.timeout = 20000;
+  x.onreadystatechange = function () {
+    if (x.readyState !== 4) return;
+    if (x.status >= 200 && x.status < 300) {
+      try { cb(null, JSON.parse(x.responseText)); }
+      catch (e) { cb('parse'); }
+    } else { cb('http ' + x.status); }
+  };
+  x.ontimeout = function () { cb('timeout'); };
+  x.send();
+}
 
-function render(items){
-  grid.innerHTML = "";
-  items.forEach(function(it){
-    var b = document.createElement("button");
-    b.className = "card";
-    b.innerHTML = '<div class="pic">▶</div><div class="t"></div>';
-    b.querySelector(".t").textContent = it.title;
-    b.onclick = function(){ lastCard = b; play(it); };
-    grid.appendChild(b);
+function clean(s) {
+  if (s instanceof Array) s = s.join(' ');
+  s = String(s || '');
+  s = s.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
+       .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/\s+/g, ' ');
+  s = s.replace(/^\s+|\s+$/g, '');
+  if (s.length > 400) s = s.substring(0, 400) + '...';
+  return s;
+}
+
+function first(v) {
+  if (v instanceof Array) return v[0];
+  return v;
+}
+
+function loadCatalog() {
+  showMsg('Загрузка каталога...');
+  var q = 'collection:feature_films AND mediatype:movies';
+  var url = 'https://archive.org/advancedsearch.php?q=' + encodeURIComponent(q) +
+    '&fl%5B%5D=identifier&fl%5B%5D=title&fl%5B%5D=year&fl%5B%5D=description' +
+    '&sort%5B%5D=downloads%20desc&rows=48&page=1&output=json';
+  getJSON(url, function (err, data) {
+    if (err || !data || !data.response) {
+      showMsg('Не удалось загрузить каталог (' + err + '). Нажмите OK, чтобы повторить.');
+      return;
+    }
+    showMsg('');
+    var docs = data.response.docs;
+    items = [];
+    for (var i = 0; i < docs.length; i++) {
+      var d = docs[i];
+      items.push({
+        id: d.identifier,
+        title: clean(first(d.title)) || d.identifier,
+        year: first(d.year) || '',
+        desc: clean(d.description) || 'Описание пока недоступно.',
+        poster: 'https://archive.org/services/img/' + d.identifier
+      });
+    }
+    renderCards();
+    setFocus(0);
   });
-  grid.firstChild && grid.firstChild.focus();
 }
 
-// ----- Навигация стрелками по сетке (ищем ближайший элемент в нужную сторону) -----
-function moveFocus(dir){
-  var cur = document.activeElement, cards = [].slice.call(document.querySelectorAll(".card"));
-  if (!cur || !cur.classList.contains("card")) { cards[0] && cards[0].focus(); return; }
-  var r = cur.getBoundingClientRect(), cx = r.left+r.width/2, cy = r.top+r.height/2, best=null, bd=1e9;
-  cards.forEach(function(c){
-    if (c===cur) return;
-    var q = c.getBoundingClientRect(), x = q.left+q.width/2, y = q.top+q.height/2, dx=x-cx, dy=y-cy;
-    var ok = (dir==="LEFT"&&dx<-10)||(dir==="RIGHT"&&dx>10)||(dir==="UP"&&dy<-10)||(dir==="DOWN"&&dy>10);
-    if (!ok) return;
-    var d = (dir==="LEFT"||dir==="RIGHT") ? Math.abs(dx)+Math.abs(dy)*3 : Math.abs(dy)+Math.abs(dx)*3;
-    if (d<bd){bd=d;best=c;}
-  });
-  if (best){ best.focus(); best.scrollIntoView({block:"nearest"}); }
-}
-
-// ----- Плеер -----
-function play(it){
-  document.getElementById("ptitle").textContent = it.title;
-  player.style.display = "block";
-  v.src = it.url;            // MP4 и HLS (.m3u8) ТВ играет нативно
-  v.play();
-  showHud();
-}
-function stop(){
-  v.pause(); v.removeAttribute("src"); v.load();
-  player.style.display = "none";
-  lastCard && lastCard.focus();
-}
-function showHud(){ hud.classList.add("show"); clearTimeout(hudTimer);
-  hudTimer = setTimeout(function(){ hud.classList.remove("show"); }, 3500); }
-function toggle(){ v.paused ? v.play() : v.pause(); showHud(); }
-function seek(s){ v.currentTime = Math.max(0, v.currentTime + s); showHud(); }
-v.addEventListener("timeupdate", function(){
-  if (v.duration) prog.style.width = (v.currentTime/v.duration*100)+"%"; });
-v.addEventListener("ended", stop);
-
-document.addEventListener("keydown", function(e){
-  var k = e.keyCode, inPlayer = player.style.display === "block";
-  if (inPlayer){
-    if (k===KEY.ENTER||k===KEY.PLAYPAUSE) toggle();
-    else if (k===KEY.PLAY) { v.play(); showHud(); }
-    else if (k===KEY.PAUSE) { v.pause(); showHud(); }
-    else if (k===KEY.LEFT||k===KEY.RW) seek(-10);
-    else if (k===KEY.RIGHT||k===KEY.FF) seek(10);
-    else if (k===KEY.BACK||k===KEY.STOP||k===27||k===8) stop();
-    else showHud();
-    e.preventDefault(); return;
+function renderCards() {
+  elCards.innerHTML = '';
+  for (var i = 0; i < items.length; i++) {
+    var c = document.createElement('div');
+    c.className = 'card';
+    var p = document.createElement('div');
+    p.className = 'poster';
+    var img = document.createElement('img');
+    img.src = items[i].poster;
+    img.onerror = function () { this.style.display = 'none'; };
+    p.appendChild(img);
+    var t = document.createElement('div');
+    t.className = 'ctitle';
+    t.textContent = items[i].title;
+    c.appendChild(p);
+    c.appendChild(t);
+    elCards.appendChild(c);
   }
-  if (k===KEY.LEFT) moveFocus("LEFT");
-  else if (k===KEY.RIGHT) moveFocus("RIGHT");
-  else if (k===KEY.UP) moveFocus("UP");
-  else if (k===KEY.DOWN) moveFocus("DOWN");
+}
+
+function setFocus(n) {
+  if (!items.length) return;
+  if (n < 0) n = 0;
+  if (n > items.length - 1) n = items.length - 1;
+  var cards = elCards.children;
+  if (cards[cur]) cards[cur].className = 'card';
+  cur = n;
+  var el = cards[cur];
+  el.className = 'card focus';
+  document.getElementById('itTitle').textContent = items[cur].title;
+  document.getElementById('itYear').textContent = items[cur].year;
+  document.getElementById('itDesc').textContent = items[cur].desc;
+  var top = el.offsetTop;
+  var bottom = top + el.offsetHeight + 30;
+  if (top < elWrap.scrollTop) elWrap.scrollTop = top - 24;
+  else if (bottom > elWrap.scrollTop + elWrap.clientHeight) elWrap.scrollTop = bottom - elWrap.clientHeight + 24;
+}
+
+function columns() {
+  var cards = elCards.children;
+  if (!cards.length) return 1;
+  var t = cards[0].offsetTop, n = 0;
+  for (var i = 0; i < cards.length; i++) {
+    if (cards[i].offsetTop === t) n++; else break;
+  }
+  return n || 1;
+}
+
+function fmt(s) {
+  if (!s || isNaN(s)) s = 0;
+  s = Math.floor(s);
+  var h = Math.floor(s / 3600), m = Math.floor((s % 3600) / 60), x = s % 60;
+  return (h ? h + ':' : '') + (m < 10 && h ? '0' : '') + m + ':' + (x < 10 ? '0' : '') + x;
+}
+
+function showOvl() {
+  elOvl.className = 'on';
+  if (ovlTimer) clearTimeout(ovlTimer);
+  ovlTimer = setTimeout(function () { elOvl.className = ''; }, 4000);
+}
+
+function updateBar() {
+  var d = vid.duration || 0;
+  var t = vid.currentTime || 0;
+  document.getElementById('pFill').style.width = (d ? (t / d * 100) : 0) + '%';
+  document.getElementById('pTime').textContent = fmt(t) + ' / ' + fmt(d);
+}
+
+function pickFile(files) {
+  var best = null, any = null, i, f;
+  for (i = 0; i < files.length; i++) {
+    f = files[i];
+    if (!f.name || !/\.mp4$/i.test(f.name)) continue;
+    if (!any) any = f;
+    if (String(f.format).toLowerCase() === 'h.264' && !best) best = f;
+  }
+  return best || any;
+}
+
+function openPlayer(item) {
+  showMsg('Подготовка видео...');
+  getJSON('https://archive.org/metadata/' + item.id, function (err, data) {
+    if (err || !data || !data.files) { showMsg('Ошибка: ' + err); setTimeout(function () { showMsg(''); }, 3000); return; }
+    var f = pickFile(data.files);
+    if (!f) { showMsg('У этого фильма нет MP4-файла'); setTimeout(function () { showMsg(''); }, 3000); return; }
+    var parts = f.name.split('/');
+    for (var i = 0; i < parts.length; i++) parts[i] = encodeURIComponent(parts[i]);
+    var url = 'https://archive.org/download/' + item.id + '/' + parts.join('/');
+    inPlayer = true;
+    elPlayer.className = 'on';
+    document.getElementById('pTitle').textContent = item.title;
+    vid.src = url;
+    vid.play();
+    showMsg('Загрузка видео...');
+    showOvl();
+  });
+}
+
+function closePlayer() {
+  inPlayer = false;
+  vid.pause();
+  vid.removeAttribute('src');
+  vid.load();
+  elPlayer.className = '';
+  elOvl.className = '';
+  showMsg('');
+}
+
+vid.addEventListener('playing', function () { showMsg(''); });
+vid.addEventListener('waiting', function () { showMsg('Буферизация...'); });
+vid.addEventListener('timeupdate', updateBar);
+vid.addEventListener('error', function () { showMsg('Не удалось воспроизвести это видео'); });
+vid.addEventListener('ended', closePlayer);
+
+function seek(sec) {
+  var t = (vid.currentTime || 0) + sec;
+  if (t < 0) t = 0;
+  vid.currentTime = t;
+  showOvl();
+}
+
+function togglePlay() {
+  if (vid.paused) vid.play(); else vid.pause();
+  showOvl();
+}
+
+document.addEventListener('keydown', function (e) {
+  var k = e.keyCode;
+  if (inPlayer) {
+    if (k === 10009 || k === 8 || k === 27 || k === 413) { closePlayer(); }
+    else if (k === 13 || k === 32 || k === 10252) { togglePlay(); }
+    else if (k === 415) { vid.play(); showOvl(); }
+    else if (k === 19) { vid.pause(); showOvl(); }
+    else if (k === 37) { seek(-10); }
+    else if (k === 39) { seek(10); }
+    else if (k === 412) { seek(-30); }
+    else if (k === 417) { seek(30); }
+    else if (k === 38 || k === 40) { showOvl(); }
+    else { return; }
+    e.preventDefault();
+    return;
+  }
+  if (!items.length) {
+    if (k === 13) loadCatalog();
+    return;
+  }
+  var cols = columns();
+  if (k === 37) setFocus(cur - 1);
+  else if (k === 39) setFocus(cur + 1);
+  else if (k === 38) setFocus(cur - cols);
+  else if (k === 40) setFocus(cur + cols > items.length - 1 ? items.length - 1 : cur + cols);
+  else if (k === 13) openPlayer(items[cur]);
   else return;
   e.preventDefault();
 });
 
-render(CATALOG);
-</script></body></html>
+try {
+  if (window.tizen && tizen.tvinputdevice) {
+    var keys = ['MediaPlay', 'MediaPause', 'MediaPlayPause', 'MediaFastForward', 'MediaRewind', 'MediaStop'];
+    for (var i = 0; i < keys.length; i++) {
+      try { tizen.tvinputdevice.registerKey(keys[i]); } catch (e) {}
+    }
+  }
+} catch (e) {}
+
+loadCatalog();
+</script>
+</body>
+</html>
