@@ -342,6 +342,20 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
 /* V14 remote channel aliases */
 #videoWrap { background:#000 !important; }
 #videoWrap video { object-fit:fill !important; }
+
+/* V15: TV fullscreen overlay auto-hide and row actions live only under the player. */
+#fullscreenOverlay { opacity:1; transform:translateY(0); transition:opacity .22s ease, transform .22s ease; }
+#fullscreenOverlay.controls-hidden { opacity:0 !important; pointer-events:none !important; transform:translateY(14px) !important; }
+.channel-tools { display:none !important; }
+body.tv-fallback-fullscreen #fullscreenOverlay.controls-hidden { opacity:0 !important; pointer-events:none !important; }
+
+
+/* V15: auto-hide fullscreen controls; channel actions are only shown below the player. */
+#fullscreenOverlay { opacity:1; transform:translateY(0); transition:opacity .22s ease, transform .22s ease; }
+#fullscreenOverlay.controls-hidden { opacity:0 !important; pointer-events:none !important; transform:translateY(14px) !important; }
+.channel-tools { display:none !important; }
+body.tv-fallback-fullscreen #fullscreenOverlay.controls-hidden { opacity:0 !important; pointer-events:none !important; }
+
 </style>
 </head>
 <body>
@@ -383,6 +397,7 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
   var $ = function (id) { return document.getElementById(id); };
   var catalogNode = $('embeddedCatalog');
   var BUILTIN = {};
+  var fullscreenControlsHideTimer = null;
   var state = {
     channels: [], filtered: [], selected: null, filter: 'favorites', sourceKey: 'all',
     favorites: [], hidden: [], rendered: 0, pageSize: 90, navIndex: 0,
@@ -561,9 +576,7 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
     var html = '<div class="channel-item' + (playing ? ' playing' : '') + (index === state.navIndex && state.focusArea === 'channels' ? ' remote-focused' : '') + '" data-index="' + index + '" role="option" aria-selected="' + (playing ? 'true' : 'false') + '">';
     html += '<button type="button" class="channel-main" data-role="main" tabindex="-1" title="Смотреть ' + esc(channel.name) + '">';
     html += '<span class="channel-number">' + (index + 1 < 10 ? '0' : '') + (index + 1) + '</span><span class="logo">' + logoMarkup(channel) + '</span>';
-    html += '<span class="channel-meta"><span class="channel-name">' + esc(channel.name) + '</span><span class="channel-group">' + esc(channel.group || channel.source || 'Телеканал') + '</span></span><span class="mini-live"><span class="led"></span>TV</span></button>';
-    html += '<div class="channel-tools"><button type="button" class="tool' + (fav ? ' is-fav' : '') + '" data-role="fav" tabindex="-1" aria-label="' + (fav ? 'Убрать из избранного' : 'Добавить в избранное') + '">' + (fav ? '♥' : '♡') + '</button>';
-    html += '<button type="button" class="tool delete" data-role="hide" tabindex="-1" aria-label="' + (hidden ? 'Восстановить канал' : 'Убрать канал') + '">' + (hidden ? '↶' : '×') + '</button></div></div>';
+    html += '<span class="channel-meta"><span class="channel-name">' + esc(channel.name) + '</span><span class="channel-group">' + esc(channel.group || channel.source || 'Телеканал') + '</span></span><span class="mini-live"><span class="led"></span>TV</span></button></div>';
     return html;
   }
   function bindRowEvents(startIndex) {
@@ -623,7 +636,7 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
     list.scrollTop = 0;
     if (!state.filtered.length) {
       message = state.filter === 'favorites' ? 'Пока нет избранных' : state.filter === 'hidden' ? 'Удалённых каналов нет' : 'Каналы не найдены';
-      extra = state.filter === 'hidden' ? 'Убери канал кнопкой ×, чтобы он появился здесь.' : state.filter === 'favorites' ? 'Нажми ♡ на канале, чтобы сохранить его здесь.' : 'Попробуй другой поиск или каталог.';
+      extra = state.filter === 'hidden' ? 'Выбери канал и нажми «Удалить канал» под плеером.' : state.filter === 'favorites' ? 'Выбери канал и нажми «В избранное» под плеером.' : 'Попробуй другой поиск или каталог.';
       list.innerHTML = '<div class="empty"><div class="empty-symbol">📺</div><strong>' + esc(message) + '</strong><span>' + esc(extra) + '</span></div>';
       updateStats(); updateTabs();
       if (shouldFocus) {
@@ -651,7 +664,7 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
   function focusRow(index, role) {
     if (!state.filtered.length) return;
     index = Math.max(0, Math.min(state.filtered.length - 1, index));
-    state.navIndex = index; state.navRole = role || 'main'; state.focusArea = 'channels';
+    state.navIndex = index; state.navRole = 'main'; state.focusArea = 'channels';
     while (state.rendered <= index) renderMore();
     var item = $('channelList').querySelector('.channel-item[data-index="' + index + '"]');
     var target = item ? item.querySelector('[data-role="' + state.navRole + '"]') : null;
@@ -1178,12 +1191,26 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
   function nativeFullscreenActive(wrap) {
     return !!(document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap || document.webkitIsFullScreen);
   }
+  function clearFullscreenControlsTimer() {
+    if (fullscreenControlsHideTimer) { window.clearTimeout(fullscreenControlsHideTimer); fullscreenControlsHideTimer = null; }
+  }
+  function showFullscreenControls() {
+    var overlay = $('fullscreenOverlay');
+    if (!overlay || !state.fallbackFullscreen) return;
+    removeClass(overlay, 'controls-hidden');
+    clearFullscreenControlsTimer();
+    fullscreenControlsHideTimer = window.setTimeout(function () {
+      var current = $('fullscreenOverlay');
+      if (state.fallbackFullscreen && current) addClass(current, 'controls-hidden');
+      fullscreenControlsHideTimer = null;
+    }, 5000);
+  }
   function setFallbackFullscreen(enable) {
     var wrap = $('videoWrap'), video, parent, next;
     if (!wrap) return;
     if (enable) {
       if (state.fallbackFullscreen) return;
-      pauseCurrentPlayback();
+      clearFullscreenControlsTimer();
       state.preFullscreenVideoMode = 'stretch';
       state.fullscreenWrapParent = wrap.parentNode;
       state.fullscreenWrapNextSibling = wrap.nextSibling;
@@ -1199,21 +1226,23 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
       window.setTimeout(syncAvPlayDisplayRect, 50); window.setTimeout(syncAvPlayDisplayRect, 220); window.setTimeout(syncAvPlayDisplayRect, 650);
       updateFullscreenActions();
       if ($('fullscreenPauseBtn')) focusButton($('fullscreenPauseBtn'), 'overlay');
-      toast('Полный экран включён. BACK / Escape — выйти. Канал на паузе.');
+      showFullscreenControls();
+      toast('Полный экран включён. BACK / Escape — выйти.');
     } else {
       if (!state.fallbackFullscreen) return;
-      pauseCurrentPlayback();
+      clearFullscreenControlsTimer();
+      var visibleOverlay = $('fullscreenOverlay'); if (visibleOverlay) removeClass(visibleOverlay, 'controls-hidden');
       parent = state.fullscreenWrapParent; next = state.fullscreenWrapNextSibling;
       try { if (parent && wrap.parentNode !== parent) parent.insertBefore(wrap, next && next.parentNode === parent ? next : null); } catch (restoreErr) { }
       removeClass(document.body, 'tv-fallback-fullscreen'); removeClass(document.documentElement, 'tv-player-fullscreen');
-      state.fallbackFullscreen = false; state.preFullscreenVideoMode = null; state.fullscreenWrapParent = null; state.fullscreenWrapNextSibling = null;
+      state.fallbackFullscreen = false; clearFullscreenControlsTimer();
+      state.preFullscreenVideoMode = null; state.fullscreenWrapParent = null; state.fullscreenWrapNextSibling = null;
       state.videoMode = 'stretch'; setStore(STORAGE_VIDEO_MODE, 'stretch');
       video = wrap.getElementsByTagName('video')[0]; applyVideoMode(video || null);
       syncVideo16x9Layout(); window.setTimeout(syncVideo16x9Layout, 120); window.setTimeout(syncVideo16x9Layout, 320);
       window.setTimeout(syncAvPlayDisplayRect, 70); window.setTimeout(syncAvPlayDisplayRect, 280);
-      pauseCurrentPlayback();
       if (state.selected) window.setTimeout(function () { focusSelected(); }, 120);
-      toast('Окно плеера восстановлено. Канал на паузе.');
+      toast('Окно плеера восстановлено. Эфир продолжается.');
     }
   }
 
@@ -1409,25 +1438,14 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
       }
       if (key === 'ArrowRight' || key === 'ArrowLeft') {
         if (e.preventDefault) e.preventDefault();
-        if (key === 'ArrowRight') {
-          if (role === 'main') focusRow(idx, 'fav');
-          else if (role === 'fav') focusRow(idx, 'hide');
-          else focusPlayerButton(0);
-        } else {
-          if (role === 'hide') focusRow(idx, 'fav');
-          else if (role === 'fav') focusRow(idx, 'main');
-          else setSearchOpen(true, true);
-        }
+        if (key === 'ArrowRight') focusPlayerButton(0);
+        else setSearchOpen(true, true);
         return;
       }
       if (key === 'Enter') {
         if (e.preventDefault) e.preventDefault();
         var channel = state.filtered[idx];
-        if (channel) {
-          if (role === 'fav') toggleFavorite(channel);
-          else if (role === 'hide') toggleHidden(channel);
-          else playChannel(channel);
-        }
+        if (channel) playChannel(channel);
         return;
       }
       if (key === 'Delete') { if (e.preventDefault) e.preventDefault(); if (state.filtered[idx]) toggleHidden(state.filtered[idx]); return; }
@@ -1529,6 +1547,8 @@ body.tv-fallback-fullscreen #videoWrap video { width:100% !important; height:100
           else if (hasClass(target, 'player-control') || target.id === 'favBtn') state.focusArea = 'player';
         }
       }, true);
+      try { window.addEventListener('keydown', function () { if (state.fallbackFullscreen) showFullscreenControls(); }, true); } catch (wakeDownErr) { }
+      try { window.addEventListener('keyup', function () { if (state.fallbackFullscreen) showFullscreenControls(); }, true); } catch (wakeUpErr) { }
       try { window.addEventListener('keydown', handleKey, true); } catch (keyErr) { }
       try { document.addEventListener('keydown', handleKey, true); } catch (keyErr2) { document.onkeydown = handleKey; }
       try { document.body.addEventListener('keydown', handleKey, true); } catch (keyErr3) { }
