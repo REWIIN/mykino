@@ -258,6 +258,24 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
   .player-control#videoModeBtn { min-width:130px !important; }
 }
 
+
+/* Fullscreen fallback for embedded Smart-TV browsers that expose no Fullscreen API. */
+body.tv-fallback-fullscreen { background:#000 !important; overflow:hidden !important; }
+body.tv-fallback-fullscreen .topbar,
+body.tv-fallback-fullscreen .library,
+body.tv-fallback-fullscreen .nowrow,
+body.tv-fallback-fullscreen #playbackStatus,
+body.tv-fallback-fullscreen #playerWarning,
+body.tv-fallback-fullscreen #playerControls,
+body.tv-fallback-fullscreen .keyhelp { display:none !important; }
+body.tv-fallback-fullscreen .layout { display:block !important; width:100vw !important; height:100vh !important; min-height:0 !important; }
+body.tv-fallback-fullscreen .rightcol { display:block !important; position:static !important; width:100vw !important; height:100vh !important; min-height:0 !important; padding:0 !important; margin:0 !important; gap:0 !important; }
+body.tv-fallback-fullscreen .player-stage { display:block !important; width:100vw !important; height:100vh !important; min-height:0 !important; margin:0 !important; padding:0 !important; }
+body.tv-fallback-fullscreen .video-wrap { position:fixed !important; left:0 !important; top:0 !important; right:auto !important; bottom:auto !important; z-index:2147483000 !important; display:flex !important; width:100vw !important; height:100vh !important; min-width:0 !important; min-height:0 !important; max-width:none !important; max-height:none !important; margin:0 !important; padding:0 !important; aspect-ratio:auto !important; overflow:hidden !important; border:0 !important; border-radius:0 !important; box-shadow:none !important; background:#000 !important; }
+body.tv-fallback-fullscreen .video-wrap video { position:relative !important; left:auto !important; top:auto !important; display:block !important; width:100% !important; height:100% !important; min-width:0 !important; min-height:0 !important; max-width:none !important; max-height:none !important; object-fit:contain !important; background:#000 !important; }
+body.tv-fallback-fullscreen #fullscreenOverlay { z-index:2147483001 !important; }
+.video-wrap:fullscreen, .video-wrap:-webkit-full-screen { position:fixed !important; inset:0 !important; width:100vw !important; height:100vh !important; max-width:none !important; max-height:none !important; border:0 !important; border-radius:0 !important; background:#000 !important; }
+
 </style>
 </head>
 <body>
@@ -285,9 +303,9 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     <div class="player-status" id="playbackStatus" role="status" aria-live="polite">Каталог загружен. Ожидаю выбор канала.</div>
     <div class="warning" id="playerWarning"></div>
     <div class="controls" id="playerControls">
-      <button class="player-control" id="channelPrevBtn" type="button">CH− Назад</button><button class="player-control" id="channelNextBtn" type="button">CH+ Далее</button><button class="player-control primary" id="playPauseBtn" type="button">▶ Пуск / пауза</button><button class="player-control" id="videoModeBtn" type="button">▣ Режим: Авто</button><button class="player-control" id="fullscreenBtn" type="button">⛶ На весь экран</button><button class="player-control" id="openStreamBtn" type="button">↻ Повторить запуск</button>
+      <button class="player-control primary" id="playPauseBtn" type="button">▶ Пуск / пауза</button><button class="player-control" id="videoModeBtn" type="button">▣ Режим: Авто</button><button class="player-control" id="fullscreenBtn" type="button">⛶ На весь экран</button><button class="player-control" id="openStreamBtn" type="button">↻ Повторить запуск</button>
     </div>
-    <div class="keyhelp"><span><b>↑ / ↓</b> Каналы</span><span><b>OK / Enter</b> Смотреть / пауза</span><span><b>← / →</b> Действия</span><span><b>CH+ / CH−</b> Следующий канал</span><span><b>Режим</b> Формат экрана</span></div>
+    <div class="keyhelp"><span><b>↑ / ↓</b> Каналы</span><span><b>OK / Enter</b> Смотреть / пауза</span><span><b>← / →</b> Действия</span><span><b>CH+ / CH−</b> Каналы на пульте</span><span><b>Режим</b> Формат экрана</span></div>
   </main>
 </div>
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
@@ -303,7 +321,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     channels: [], filtered: [], selected: null, filter: 'favorites', sourceKey: 'all',
     favorites: [], hidden: [], rendered: 0, pageSize: 90, navIndex: 0,
     navRole: 'main', focusArea: 'channels', avplayActive: false, httpsRetryChannel: null, videoMode: 'auto', overlayIndex: 0,
-    playbackTimer: null, toastTimer: null, playAttempt: 0, previousSelected: null, lastChannelSwitch: 0
+    playbackTimer: null, toastTimer: null, playAttempt: 0, previousSelected: null, lastChannelSwitch: 0, lastChannelKeydownAt: 0, fallbackFullscreen: false
   };
 
   var STORAGE_FAVS = 'efir_iptv_favs_v2';
@@ -711,15 +729,19 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       rect = wrap.getBoundingClientRect();
       viewportWidth = (document.documentElement && document.documentElement.clientWidth) || window.innerWidth || 1920;
       scale = 1920 / viewportWidth;
-      x = Math.max(0, Math.round(rect.left * scale));
-      y = Math.max(0, Math.round(rect.top * scale));
-      w = Math.max(1, Math.min(1920 - x, Math.round(rect.width * scale)));
-      h = Math.max(1, Math.min(1080 - y, Math.round(rect.height * scale)));
+      if (state.fallbackFullscreen || document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap || document.webkitIsFullScreen) {
+        x = 0; y = 0; w = 1920; h = 1080;
+      } else {
+        x = Math.max(0, Math.round(rect.left * scale));
+        y = Math.max(0, Math.round(rect.top * scale));
+        w = Math.max(1, Math.min(1920 - x, Math.round(rect.width * scale)));
+        h = Math.max(1, Math.min(1080 - y, Math.round(rect.height * scale)));
+      }
       method = state.videoMode === 'fit' ? 'PLAYER_DISPLAY_MODE_LETTER_BOX' :
         state.videoMode === 'stretch' ? 'PLAYER_DISPLAY_MODE_FULL_SCREEN' : 'PLAYER_DISPLAY_MODE_AUTO_ASPECT_RATIO';
       if (state.videoMode === '4:3') {
         w = Math.max(1, Math.min(w, Math.round(h * 4 / 3)));
-        x = Math.max(0, Math.round(rect.left * scale + (rect.width * scale - w) / 2));
+        x = Math.max(0, Math.round((1920 - w) / 2));
         method = 'PLAYER_DISPLAY_MODE_FULL_SCREEN';
       }
       try { if (typeof av.setDisplayMethod === 'function') av.setDisplayMethod(method); } catch (ignore) { }
@@ -863,6 +885,71 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       return false;
     }
   }
+  function nativeFullscreenActive(wrap) {
+    return !!(document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap || document.webkitIsFullScreen);
+  }
+  function setFallbackFullscreen(enable) {
+    state.fallbackFullscreen = !!enable;
+    if (enable) {
+      addClass(document.body, 'tv-fallback-fullscreen');
+      ensureVideoOverlay();
+      window.setTimeout(function () { syncAvPlayDisplayRect(); }, 100);
+      window.setTimeout(function () { syncAvPlayDisplayRect(); }, 450);
+      if ($('fullscreenPauseBtn')) focusButton($('fullscreenPauseBtn'), 'overlay');
+      toast('Полный экран включён. BACK / Escape — выйти.');
+    } else {
+      removeClass(document.body, 'tv-fallback-fullscreen');
+      window.setTimeout(function () { syncAvPlayDisplayRect(); }, 100);
+      if (state.selected) {
+        window.setTimeout(function () { focusSelected(); }, 120);
+      }
+      toast('Окно плеера восстановлено.');
+    }
+  }
+  function exitFullscreenMode() {
+    var exited = false;
+    if (state.fallbackFullscreen) { setFallbackFullscreen(false); return true; }
+    try {
+      if ((document.fullscreenElement || document.webkitFullscreenElement || document.webkitIsFullScreen) && document.exitFullscreen) {
+        document.exitFullscreen(); exited = true;
+      } else if ((document.fullscreenElement || document.webkitFullscreenElement || document.webkitIsFullScreen) && document.webkitExitFullscreen) {
+        document.webkitExitFullscreen(); exited = true;
+      }
+    } catch (ignore) { }
+    if (exited) return true;
+    return false;
+  }
+  function toggleFullscreenMode() {
+    var wrap = $('videoWrap'), video = wrap && wrap.getElementsByTagName('video')[0], request = null, result;
+    if (!wrap) return;
+    if (state.fallbackFullscreen || nativeFullscreenActive(wrap)) {
+      if (!exitFullscreenMode()) setFallbackFullscreen(false);
+      return;
+    }
+    ensureVideoOverlay();
+    if (typeof wrap.requestFullscreen === 'function') request = wrap.requestFullscreen;
+    else if (typeof wrap.webkitRequestFullscreen === 'function') request = wrap.webkitRequestFullscreen;
+    else if (typeof wrap.webkitRequestFullScreen === 'function') request = wrap.webkitRequestFullScreen;
+    if (request) {
+      try {
+        result = request.call(wrap);
+        if (result && typeof result.then === 'function') {
+          result.then(function () { window.setTimeout(syncAvPlayDisplayRect, 100); }).catch(function () { if (!nativeFullscreenActive(wrap)) setFallbackFullscreen(true); });
+        }
+        window.setTimeout(function () {
+          if (!nativeFullscreenActive(wrap) && !state.fallbackFullscreen) setFallbackFullscreen(true);
+        }, 500);
+        return;
+      } catch (err) { /* Use the in-page TV fallback below. */ }
+    }
+    // Some mobile WebKit builds only expose native fullscreen on the video element.
+    if (video && typeof video.webkitEnterFullscreen === 'function' && !state.avplayActive) {
+      try { video.webkitEnterFullscreen(); window.setTimeout(function () { if (!nativeFullscreenActive(wrap) && !state.fallbackFullscreen) setFallbackFullscreen(true); }, 500); return; }
+      catch (ignoreVideoFullscreen) { }
+    }
+    setFallbackFullscreen(true);
+  }
+
   function updatePlayingRows() {
     var rows = $('channelList') ? $('channelList').querySelectorAll('.channel-item') : [], i, row, idx, channel, playing;
     for (i = 0; i < rows.length; i++) {
@@ -952,6 +1039,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     var row = parentWithClass(target, 'channel-item');
     var role, idx, arr, pos, i;
     if (!key) return;
+    if (key === 'ChannelUp' || key === 'ChannelDown') state.lastChannelKeydownAt = new Date().getTime();
     e.__efirHandled = true;
     if (e.stopPropagation && /^(ArrowUp|ArrowDown|ArrowLeft|ArrowRight|Enter|Escape|BrowserBack|ChannelUp|ChannelDown|PageUp|PageDown|MediaPlayPause|MediaPlay|Pause|Delete)$/.test(key)) { try { e.stopPropagation(); } catch (stopErr) { } }
 
@@ -988,10 +1076,11 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
     }
     if (key === 'BrowserBack' || key === 'Escape') {
       if (e.preventDefault) e.preventDefault();
-      try {
-        if (document.fullscreenElement && document.exitFullscreen) { document.exitFullscreen(); }
-        else if (document.webkitFullscreenElement && document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-      } catch (ignoreExit) { }
+      if (state.fallbackFullscreen || nativeFullscreenActive($('videoWrap'))) {
+        exitFullscreenMode();
+        if (state.fallbackFullscreen) setFallbackFullscreen(false);
+        return;
+      }
       if (state.selected) focusSelected(); else focusRow(0, 'main'); return;
     }
 
@@ -1099,19 +1188,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       $('playPauseBtn').onclick = togglePlayback;
       $('videoModeBtn').onclick = cycleVideoMode;
       updateVideoModeLabels();
-      $('channelPrevBtn').onclick = function () { switchChannel(-1); };
-      $('channelNextBtn').onclick = function () { switchChannel(1); };
-      $('fullscreenBtn').onclick = function () {
-        var wrap = $('videoWrap'), video = wrap.getElementsByTagName('video')[0];
-        ensureVideoOverlay();
-        try {
-          if (wrap.requestFullscreen) { wrap.requestFullscreen(); return; }
-          if (wrap.webkitRequestFullscreen) { wrap.webkitRequestFullscreen(); return; }
-          if (wrap.webkitRequestFullScreen) { wrap.webkitRequestFullScreen(); return; }
-          if (video && typeof video.webkitEnterFullscreen === 'function') { video.webkitEnterFullscreen(); return; }
-        } catch (err) { }
-        toast('Полный экран зависит от возможностей приложения телевизора.');
-      };
+      $('fullscreenBtn').onclick = toggleFullscreenMode;
       $('openStreamBtn').onclick = function () { if (state.selected) playChannel(state.selected); else toast('Сначала выбери канал.'); };
       $('channelList').onscroll = function () {
         if (state.rendered < state.filtered.length && this.scrollTop + this.clientHeight >= this.scrollHeight - 180) renderMore();
@@ -1131,9 +1208,14 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
       }, true);
       try { window.addEventListener('keydown', handleKey, true); } catch (keyErr) { }
       try { document.addEventListener('keydown', handleKey, true); } catch (keyErr2) { document.onkeydown = handleKey; }
-      if (window.tizen && window.tizen.tvinputdevice && typeof window.tizen.tvinputdevice.registerKey === 'function') {
-        var keys = ['MediaPlayPause', 'MediaPlay', 'ChannelUp', 'ChannelDown', 'PreviousChannel'];
-        for (i = 0; i < keys.length; i++) { try { window.tizen.tvinputdevice.registerKey(keys[i]); } catch (regErr) { } }
+      // Some TV browser shells expose channel-up/down key events at the window level only.
+      try { window.addEventListener('keyup', function (e) { var k = normaliseKey(e), now = new Date().getTime(); if ((k === 'ChannelUp' || k === 'ChannelDown') && now - state.lastChannelKeydownAt > 450) { if (e.preventDefault) e.preventDefault(); switchChannel(k === 'ChannelUp' ? 1 : -1); } }, true); } catch (keyupErr) { }
+      if (window.tizen && window.tizen.tvinputdevice) {
+        var keys = ['MediaPlayPause', 'MediaPlay', 'MediaPause', 'ChannelUp', 'ChannelDown', 'PreviousChannel'];
+        try { if (typeof window.tizen.tvinputdevice.registerKeyBatch === 'function') window.tizen.tvinputdevice.registerKeyBatch(keys); } catch (batchErr) { }
+        if (typeof window.tizen.tvinputdevice.registerKey === 'function') {
+          for (i = 0; i < keys.length; i++) { try { window.tizen.tvinputdevice.registerKey(keys[i]); } catch (regErr) { } }
+        }
       }
       // AVPlay's video plane is independent from HTML layout; keep it aligned when the host TV WebView resizes.
       window.addEventListener('resize', function () { window.setTimeout(syncAvPlayDisplayRect, 80); });
@@ -1141,7 +1223,7 @@ button, input, .channel-main, .tool, .seg, .player-control { -webkit-tap-highlig
         window.setTimeout(syncAvPlayDisplayRect, 80);
         window.setTimeout(function () {
           var wrap = $('videoWrap');
-          var active = !!(document.fullscreenElement === wrap || document.webkitFullscreenElement === wrap || document.webkitIsFullScreen);
+          var active = nativeFullscreenActive(wrap) || state.fallbackFullscreen;
           if (active && $('fullscreenPauseBtn')) focusButton($('fullscreenPauseBtn'), 'overlay');
           else if (state.selected) focusSelected();
         }, 140);
