@@ -44,7 +44,7 @@
     <div class="player-status" id="playbackStatus" role="status" aria-live="polite">Каталог загружен. Ожидаю выбор канала.</div>
     <div class="warning" id="playerWarning"></div>
     <div class="controls" id="playerControls">
-      <button class="player-control primary" id="playPauseBtn" type="button">▶ Пуск / пауза</button><button class="player-control" id="muteBtn" type="button">🔊 Звук</button><button class="player-control" id="fullscreenBtn" type="button">⛶ На весь экран</button><button class="player-control" id="openStreamBtn" type="button">↗ Открыть поток</button>
+      <button class="player-control primary" id="playPauseBtn" type="button">▶ Пуск / пауза</button><button class="player-control" id="muteBtn" type="button">🔊 Звук</button><button class="player-control" id="fullscreenBtn" type="button">⛶ На весь экран</button><button class="player-control" id="openStreamBtn" type="button">↻ Повторить запуск</button>
     </div>
     <div class="keyhelp"><span><b>↑ / ↓</b> Каналы</span><span><b>OK / Enter</b> Смотреть</span><span><b>← / →</b> Действия</span><span><b>CH+ / CH−</b> Следующий канал</span></div>
   </main>
@@ -55,7 +55,9 @@
 (() => {
   'use strict';
   const $ = id => document.getElementById(id);
-  const state = {channels:[],filtered:[],selected:null,filter:'all',hls:null,favorites:new Set(),hidden:new Set(),playlistLabel:'',sourceKey:'all'};
+  const state = {channels:[],filtered:[],selected:null,filter:'all',hls:null,avplayActive:false,favorites:new Set(),hidden:new Set(),playlistLabel:'',sourceKey:'all'};
+  let playAttempt = 0;
+  let hlsLoader = null;
   const STORAGE_FAVS='efir_iptv_favs_v2', STORAGE_HIDDEN='efir_iptv_hidden_v1', STORAGE_SOURCE='efir_iptv_source_v1';
   const BUILTIN=JSON.parse($('embeddedCatalog').textContent);
   try { state.favorites = new Set(JSON.parse(localStorage.getItem(STORAGE_FAVS)||'[]')); } catch {}
@@ -103,23 +105,181 @@
   function updateStats(){const visible=state.channels.filter(c=>!state.hidden.has(channelKey(c)));const favCount=visible.filter(c=>state.favorites.has(channelKey(c))).length;$('channelCount').textContent=visible.length.toLocaleString('ru');$('topCount').textContent=visible.length.toLocaleString('ru');$('favCount').textContent=favCount?`(${favCount})`:'';$('listState').textContent=state.filter==='hidden'?'Удалённые каналы':state.filter==='favorites'?'Твои любимые каналы':currentSourceName()}
   function toggleFavorite(c){const key=channelKey(c);if(state.favorites.has(key))state.favorites.delete(key);else state.favorites.add(key);persistFavs();updateTabs();renderChannels(true,key,'fav');updateStats();if(state.selected&&channelKey(state.selected)===key){$('favBtn').textContent=state.favorites.has(key)?'♥':'♡';$('favBtn').classList.toggle('is-fav',state.favorites.has(key));$('favBtn').title=state.favorites.has(key)?'Убрать из избранного':'Добавить в избранное'}toast(state.favorites.has(key)?'Добавлено в избранное ♥':'Убрано из избранного')}
   function toggleHidden(c){const key=channelKey(c);const restoring=state.hidden.has(key);if(restoring){state.hidden.delete(key);if(state.filter==='hidden')state.filter='all';updateTabs()}else{state.hidden.add(key)}persistHidden();if(!restoring&&state.selected&&channelKey(state.selected)===key){state.selected=null;clearVideo();$('nowName').textContent='Канал убран из списка';$('nowGroup').textContent='Выбери другой канал слева';$('nowLogo').textContent='TV';$('liveText').textContent='ГОТОВ К ЭФИРУ';$('favBtn').textContent='♡';$('favBtn').classList.remove('is-fav')}renderChannels(true,restoring?key:null,'main');updateStats();toast(restoring?'Канал восстановлен ↶':'Канал убран. Вернуть можно во вкладке «Удалённые».')}
-  function clearVideo(){if(state.hls){try{state.hls.destroy()}catch{}state.hls=null}const old=$('videoWrap').querySelector('video');if(old){try{old.pause();old.removeAttribute('src');old.load()}catch{}}$('videoWrap').innerHTML=`<div class="placeholder"><div class="placeholder-icon">▶</div><h2>Твой экран готов</h2><p>Выбери канал слева и нажми OK на пульте.<br>Здесь появится прямой эфир.</p></div>`;$('playerWarning').classList.remove('show')}
-  function showWarning(msg){$('playerWarning').textContent=msg;$('playerWarning').classList.add('show')}
-  function playChannel(c){if(state.hidden.has(channelKey(c))){toast('Канал удалён. Верни его во вкладке «Удалённые».');return}state.selected=c;clearVideo();$('nowName').textContent=c.name;$('nowGroup').textContent=(c.group||'Без группы')+(c.source?' · '+c.source:'');$('nowLogo').innerHTML=logoMarkup(c);$('liveText').textContent='ПОДКЛЮЧЕНИЕ';$('favBtn').textContent=state.favorites.has(channelKey(c))?'♥':'♡';$('favBtn').classList.toggle('is-fav',state.favorites.has(channelKey(c)));$('favBtn').title=state.favorites.has(channelKey(c))?'Убрать из избранного':'Добавить в избранное';setStatus('Подключаюсь к потоку…');renderChannels(true,channelKey(c),'main');
-    const v=document.createElement('video');v.controls=true;v.autoplay=true;v.playsInline=true;v.preload='auto';$('videoWrap').replaceChildren(v);
-    v.addEventListener('playing',()=>{$('liveText').textContent='В ПРЯМОМ ЭФИРЕ';setStatus('Воспроизведение идёт.');$('playerWarning').classList.remove('show')});v.addEventListener('waiting',()=>{if(v.currentTime===0)setStatus('Буферизация потока…')});v.addEventListener('error',()=>{const e=v.error;setStatus(e?`Ошибка видео (код ${e.code}).`:'Ошибка воспроизведения.');$('liveText').textContent='НЕТ СИГНАЛА';showWarning('Поток не запустился: ссылка могла истечь, сервер требует авторизацию или формат не поддерживается браузером. Попробуй «Открыть поток».')});
-    const url=c.url,isHls=/\.m3u8(?:$|[?#])/i.test(url)||c.type==='application/vnd.apple.mpegurl';if(isHls&&v.canPlayType('application/vnd.apple.mpegurl')){v.src=url;v.play().catch(()=>setStatus('Нажми ▶ в плеере, чтобы начать.'))}else if(isHls){loadHls(url,v).then(ok=>{if(!ok){v.src=url;v.play().catch(()=>{});setStatus('Пробую открыть поток напрямую…')}})}else{v.src=url;v.play().catch(()=>setStatus('Нажми ▶ в плеере, чтобы начать.'))}
+  function ensureHls(){
+    if(window.Hls)return Promise.resolve(true);
+    if(hlsLoader)return hlsLoader;
+    hlsLoader=new Promise(resolve=>{
+      const urls=[
+        'https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js',
+        'https://unpkg.com/hls.js@1.5.17/dist/hls.min.js'
+      ];
+      let index=0, finished=false, timer=null;
+      const done=ok=>{if(finished)return;finished=true;if(timer)clearTimeout(timer);resolve(!!ok)};
+      const next=()=>{
+        if(index>=urls.length){done(false);return}
+        const script=document.createElement('script');script.src=urls[index++];script.async=true;
+        script.onload=()=>done(!!window.Hls);
+        script.onerror=()=>{if(timer)clearTimeout(timer);next()};
+        timer=setTimeout(()=>{script.onload=null;script.onerror=null;next()},7000);
+        document.head.appendChild(script);
+      };
+      next();
+    }).then(ok=>{if(!ok)hlsLoader=null;return ok});
+    return hlsLoader;
   }
-  function loadHls(url,video){return new Promise(resolve=>{if(window.Hls&&window.Hls.isSupported()){try{const h=new window.Hls({enableWorker:true,lowLatencyMode:true,backBufferLength:30});state.hls=h;h.attachMedia(video);h.on(window.Hls.Events.MEDIA_ATTACHED,()=>h.loadSource(url));h.on(window.Hls.Events.MANIFEST_PARSED,()=>{video.play().catch(()=>setStatus('Нажми ▶ в плеере, чтобы начать.'));resolve(true)});h.on(window.Hls.Events.ERROR,(_,data)=>{if(data.fatal){setStatus('Ошибка HLS-потока.');showWarning('HLS не загрузился. Возможно, ссылка недействительна или сервер блокирует доступ из браузера.');try{h.destroy()}catch{}state.hls=null;resolve(false)}});setTimeout(()=>resolve(true),5000)}catch{resolve(false)}}else resolve(false)})}
+  function isHlsCandidate(url){
+    if(/\.m3u8(?:$|[?#])/i.test(url))return true;
+    // IPTV providers often expose HLS endpoints without a .m3u8 suffix.
+    return !/\.(mp4|m4v|webm|ogv|mp3|aac|ts|mkv|mpd)(?:$|[?#])/i.test(url);
+  }
+  function clearVideo(){
+    stopAvPlay();
+    if(state.hls){try{state.hls.destroy()}catch{}state.hls=null}
+    const old=$('videoWrap').querySelector('video');
+    if(old){try{old.pause();old.removeAttribute('src');old.querySelectorAll('source').forEach(s=>s.remove());old.load()}catch{}}
+    $('videoWrap').innerHTML=`<div class="placeholder"><div class="placeholder-icon">▶</div><h2>Твой экран готов</h2><p>Выбери канал слева и нажми OK на пульте.<br>Здесь появится прямой эфир.</p></div>`;
+    $('playerWarning').classList.remove('show');
+  }
+  function showWarning(msg){$('playerWarning').textContent=msg;$('playerWarning').classList.add('show')}
+  function getSamsungAvPlay(){
+    try{return window.webapis&&window.webapis.avplay?window.webapis.avplay:null}catch{return null}
+  }
+  function stopAvPlay(){
+    const av=getSamsungAvPlay();
+    if(!av||!state.avplayActive)return;
+    try{av.stop()}catch{}
+    try{av.close()}catch{}
+    state.avplayActive=false;
+  }
+  function trySamsungAvPlay(url,video,attempt,onSuccess,onFailure){
+    const av=getSamsungAvPlay();
+    if(!av||typeof av.open!=='function'||typeof av.prepareAsync!=='function')return false;
+    let failed=false;
+    const fail=detail=>{
+      if(failed||attempt!==playAttempt)return;
+      failed=true;stopAvPlay();
+      if(!video.parentNode)$('videoWrap').replaceChildren(video);
+      onFailure('Samsung AVPlay: '+String(detail&&detail.message||detail||'не удалось подготовить поток'));
+    };
+    try{
+      stopAvPlay();
+      av.open(url);
+      state.avplayActive=true;
+      const rect=$('videoWrap').getBoundingClientRect();
+      const sx=1920/(window.innerWidth||1920), sy=1080/(window.innerHeight||1080);
+      av.setDisplayRect(Math.max(0,Math.round(rect.left*sx)),Math.max(0,Math.round(rect.top*sy)),Math.max(1,Math.round(rect.width*sx)),Math.max(1,Math.round(rect.height*sy)));
+      try{if(typeof av.setDisplayMethod==='function')av.setDisplayMethod('PLAYER_DISPLAY_MODE_LETTER_BOX')}catch{}
+      if(typeof av.setListener==='function')av.setListener({
+        onbufferingstart:()=>{if(attempt===playAttempt)setStatus('Samsung AVPlay: буферизация потока…')},
+        onbufferingcomplete:()=>{if(attempt===playAttempt)setStatus('Samsung AVPlay: буферизация завершена.')},
+        onstreamcompleted:()=>{if(attempt===playAttempt)setStatus('Поток завершён.')},
+        onerror:e=>fail(e||'ошибка нативного плеера')
+      });
+      // AVPlay renders through Samsung's native media layer, not the HTML <video> element.
+      $('videoWrap').replaceChildren();
+      setStatus('Пробую аппаратный плеер Samsung AVPlay…');
+      av.prepareAsync(()=>{
+        if(attempt!==playAttempt){stopAvPlay();return}
+        try{av.play();onSuccess();}
+        catch(e){fail(e)}
+      },err=>fail(err));
+      return true;
+    }catch(e){
+      stopAvPlay();
+      try{av.close()}catch{}
+      return false;
+    }
+  }
+  function describeMediaError(v,url,detail){
+    const code=v&&v.error?v.error.code:0;
+    const mixed=location.protocol==='https:'&&/^http:\/\//i.test(url);
+    if(mixed)return 'Этот поток использует HTTP, а сайт открыт через HTTPS на GitHub Pages. ТВ-браузер может блокировать такой поток как небезопасный смешанный контент. Нужен HTTPS-адрес потока или серверный HTTPS-релей; сама HTML-страница снять это ограничение не может.';
+    if(/manifestLoadError|fragLoadError|levelLoadError|network|cors|cross-origin/i.test(String(detail||'')))return 'Не удалось загрузить HLS-манифест или сегменты. Частая причина — сервер потока не разрешает CORS для сайта GitHub Pages, поток недоступен из сети ТВ или ссылка истекла. Это нельзя исправить только кодом плеера.';
+    if(code===3)return 'ТВ получил данные, но не смог декодировать видео/аудио. Возможен неподдерживаемый кодек или повреждённый поток.';
+    if(code===4)return 'Браузер ТВ не распознал формат или сервер отдаёт не видеопоток. Этот URL может требовать фирменный IPTV-плеер/кодек.';
+    if(code===2)return 'Сетевая ошибка при загрузке потока. Сервер мог быть выключен, недоступен из сети ТВ или требовать авторизацию.';
+    return 'ТВ-браузер не смог запустить этот адрес. Поток может быть выключен, требовать авторизацию, использовать неподдерживаемый формат или ограничивать доступ.';
+  }
+  function startHls(url,video,attempt,onStarted){
+    return ensureHls().then(ready=>new Promise(resolve=>{
+      if(attempt!==playAttempt){resolve({ok:false,cancelled:true});return}
+      if(!ready||!window.Hls||!window.Hls.isSupported()){resolve({ok:false,detail:'hls.js недоступен или MediaSource не поддерживается этим приложением ТВ'});return}
+      let settled=false,manifestReady=false,timeout=null;
+      const h=new window.Hls({enableWorker:false,lowLatencyMode:false,backBufferLength:20,maxBufferLength:20,manifestLoadingTimeOut:12000,fragLoadingTimeOut:15000});
+      state.hls=h;if(onStarted)onStarted();
+      const finish=(ok,detail)=>{if(settled)return;settled=true;if(timeout)clearTimeout(timeout);if(!ok){try{h.destroy()}catch{}if(state.hls===h)state.hls=null}resolve({ok,detail})};
+      timeout=setTimeout(()=>finish(false,'тайм-аут при загрузке HLS'),18000);
+      h.on(window.Hls.Events.MEDIA_ATTACHED,()=>{if(attempt===playAttempt)h.loadSource(url)});
+      h.on(window.Hls.Events.MANIFEST_PARSED,()=>{
+        manifestReady=true;
+        if(attempt!==playAttempt){finish(false,'переключён канал');return}
+        setStatus('HLS загружен. Запускаю видео…');
+        video.play().catch(()=>setStatus('Поток подготовлен. Нажми OK/Play на пульте.'));
+        finish(true);
+      });
+      h.on(window.Hls.Events.ERROR,(_,data)=>{
+        if(!data||!data.fatal)return;
+        const detail=data.details||data.type||'ошибка HLS';
+        if(manifestReady){
+          setStatus('Ошибка при получении сегментов HLS.');
+          showWarning(describeMediaError(video,url,detail));
+          try{h.destroy()}catch{}if(state.hls===h)state.hls=null;
+        }else finish(false,detail);
+      });
+      try{h.attachMedia(video)}catch(e){finish(false,String(e&&e.message||e))}
+    }));
+  }
+  function playChannel(c,directOnly=false){
+    if(state.hidden.has(channelKey(c))){toast('Канал удалён. Верни его во вкладке «Удалённые».');return}
+    const attempt=++playAttempt;
+    state.selected=c;clearVideo();$('nowName').textContent=c.name;$('nowGroup').textContent=(c.group||'Без группы')+(c.source?' · '+c.source:'');$('nowLogo').innerHTML=logoMarkup(c);$('liveText').textContent='ПОДКЛЮЧЕНИЕ';$('favBtn').textContent=state.favorites.has(channelKey(c))?'♥':'♡';$('favBtn').classList.toggle('is-fav',state.favorites.has(channelKey(c)));$('favBtn').title=state.favorites.has(channelKey(c))?'Убрать из избранного':'Добавить в избранное';setStatus('Подключаюсь к потоку…');renderChannels(true,channelKey(c),'main');
+    const url=c.url, maybeHls=isHlsCandidate(url), httpsToHttp=location.protocol==='https:'&&/^http:\/\//i.test(url);
+    const v=document.createElement('video');v.controls=true;v.autoplay=true;v.playsInline=true;v.setAttribute('playsinline','');v.preload='auto';$('videoWrap').replaceChildren(v);
+    let played=false, hlsMode=false, fallbackStarted=false, failDetail='';
+    const finalFailure=(detail)=>{
+      if(attempt!==playAttempt||played)return;
+      failDetail=detail||failDetail;$('liveText').textContent='НЕТ СИГНАЛА';setStatus(v.error?`Ошибка видео (код ${v.error.code}).`:'Поток не отвечает.');showWarning(describeMediaError(v,url,failDetail));
+    };
+    const tryHls=()=>{
+      if(attempt!==playAttempt||fallbackStarted||directOnly)return;
+      fallbackStarted=true;setStatus('Пробую совместимый HLS-режим для ТВ…');
+      startHls(url,v,attempt,()=>{hlsMode=true;}).then(result=>{
+        if(attempt!==playAttempt||result.cancelled)return;
+        if(!result.ok){failDetail=result.detail||'ошибка HLS';finalFailure(failDetail)}
+      }).catch(e=>{failDetail=String(e&&e.message||e);finalFailure(failDetail)});
+    };
+    v.addEventListener('playing',()=>{if(attempt!==playAttempt)return;played=true;$('liveText').textContent='В ПРЯМОМ ЭФИРЕ';setStatus('Воспроизведение идёт.');$('playerWarning').classList.remove('show')});
+    v.addEventListener('waiting',()=>{if(attempt===playAttempt&&v.currentTime===0)setStatus(hlsMode?'Загружаю HLS-сегменты…':'Буферизация потока…')});
+    v.addEventListener('error',()=>{
+      if(attempt!==playAttempt||played||hlsMode)return;
+      if(maybeHls&&!directOnly){tryHls();return}
+      finalFailure();
+    });
+    if(httpsToHttp){setStatus('Источник использует HTTP. Проверяю нативный плеер ТВ; HTML5 в HTTPS-странице может блокировать такой адрес…')}
+    const avPlayStarted=trySamsungAvPlay(url,v,attempt,()=>{
+      if(attempt!==playAttempt)return;
+      played=true;$('liveText').textContent='В ПРЯМОМ ЭФИРЕ';setStatus('Воспроизведение через нативный Samsung AVPlay.');$('playerWarning').classList.remove('show');
+    },detail=>{
+      if(attempt!==playAttempt)return;
+      played=false;
+      if(maybeHls&&!directOnly){tryHls();return}
+      finalFailure(detail);
+    });
+    if(avPlayStarted)return;
+    // Standard HTML5 playback is the fallback when the host app doesn't expose Samsung AVPlay.
+    try{v.src=url;v.load();const p=v.play();if(p&&p.catch)p.catch(()=>{if(maybeHls&&!directOnly)tryHls();else setStatus('Автозапуск не разрешён. Нажми OK/Play на пульте.')})}catch(e){if(maybeHls&&!directOnly)tryHls();else finalFailure(String(e&&e.message||e))}
+    setTimeout(()=>{if(attempt!==playAttempt||played||fallbackStarted)return;if(maybeHls&&!directOnly)tryHls();else if(!v.error)finalFailure('тайм-аут воспроизведения')},10000);
+  }
+  
   function setFilter(filter){state.filter=filter;updateTabs();renderChannels(true,null,'main');updateStats()}
   document.querySelectorAll('[data-source]').forEach(b=>b.addEventListener('click',()=>loadBuiltin(b.dataset.source,true)));
   document.querySelectorAll('[data-filter]').forEach(b=>b.addEventListener('click',()=>setFilter(b.dataset.filter)));
   $('searchInput').addEventListener('input',()=>renderChannels(false));
   $('favBtn').addEventListener('click',()=>{if(!state.selected){toast('Сначала выбери канал.');return}toggleFavorite(state.selected)});
-  $('playPauseBtn').addEventListener('click',()=>{const v=$('videoWrap').querySelector('video');if(!v){toast('Сначала выбери канал.');return}if(v.paused)v.play().catch(()=>toast('Не удалось запустить поток.'));else v.pause()});
-  $('muteBtn').addEventListener('click',()=>{const v=$('videoWrap').querySelector('video');if(!v){toast('Сначала выбери канал.');return}v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇 Без звука':'🔊 Звук';toast(v.muted?'Звук выключен':'Звук включён')});
+  $('playPauseBtn').addEventListener('click',()=>{if(state.avplayActive){const av=getSamsungAvPlay();try{if(av&&av.getState&&av.getState()==='PLAYING')av.pause();else if(av)av.play();return}catch{}}const v=$('videoWrap').querySelector('video');if(!v){toast('Плеер ТВ не предоставляет паузу для этого режима.');return}if(v.paused)v.play().catch(()=>toast('Не удалось запустить поток.'));else v.pause()});
+  $('muteBtn').addEventListener('click',()=>{if(state.avplayActive&&window.tizen&&window.tizen.tvaudiocontrol){try{const audio=window.tizen.tvaudiocontrol,muted=!audio.isMute();audio.setMute(muted);$('muteBtn').textContent=muted?'🔇 Без звука':'🔊 Звук';toast(muted?'Звук выключен':'Звук включён');return}catch{}}const v=$('videoWrap').querySelector('video');if(!v){toast('В этом режиме приложение не даёт управлять звуком отсюда. Используй кнопку Mute на пульте.');return}v.muted=!v.muted;$('muteBtn').textContent=v.muted?'🔇 Без звука':'🔊 Звук';toast(v.muted?'Звук выключен':'Звук включён')});
   $('fullscreenBtn').addEventListener('click',()=>{const w=$('videoWrap'),v=w.querySelector('video');if(v&&typeof v.webkitEnterFullscreen==='function'){try{v.webkitEnterFullscreen();return}catch{}}if(w.requestFullscreen)w.requestFullscreen().catch(()=>toast('Полный экран не поддерживается этим браузером.'));else toast('Полный экран не поддерживается этим браузером.')});
-  $('openStreamBtn').addEventListener('click',()=>{if(!state.selected){toast('Сначала выбери канал.');return}window.open(state.selected.url,'_blank','noopener,noreferrer')});
+  $('openStreamBtn').addEventListener('click',()=>{if(!state.selected){toast('Сначала выбери канал.');return}playChannel(state.selected,true);setStatus('Повторный прямой запуск в том же окне…')});
 
   const sourceButtons=()=>[...document.querySelectorAll('[data-source]')],filterButtons=()=>[...document.querySelectorAll('[data-filter]')],playerButtons=()=>[...document.querySelectorAll('.player-control')];
   function focusedChannelIndex(el){const row=el&&el.closest?el.closest('.channel-item'):null;return row?Number(row.dataset.index):-1}
@@ -146,7 +306,6 @@
     if((key==='f'||key==='F')&&!['input','textarea'].includes(tag)&&state.selected){e.preventDefault();toggleFavorite(state.selected);return}
     if(key===' '&& !['button','input','textarea','video'].includes(tag)){e.preventDefault();$('playPauseBtn').click()}
   });
-  const hlsScript=document.createElement('script');hlsScript.src='https://cdn.jsdelivr.net/npm/hls.js@1.5.17/dist/hls.min.js';hlsScript.async=true;hlsScript.onerror=()=>console.warn('hls.js не загрузился; останутся доступными потоки с нативной поддержкой браузера');document.head.appendChild(hlsScript);
   loadBuiltin(BUILTIN[state.sourceKey]?state.sourceKey:'all',true);
 })();
 </script>
